@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/database/database.dart';
 import '../../core/database/repository_providers.dart';
-import '../../models/emprestimo_item_detalhado.dart';
+import '../../models/emprestimo_extensions.dart';
 import '../emprestimos/emprestimos_providers.dart';
 
 class DashboardIndicadores {
@@ -10,7 +11,6 @@ class DashboardIndicadores {
     required this.atrasados,
     required this.emprestimosHoje,
     required this.devolucoesHoje,
-    required this.alunosComLivros,
     required this.devolucoesAtrasadasOrdenadas,
   });
 
@@ -18,8 +18,7 @@ class DashboardIndicadores {
   final int atrasados;
   final int emprestimosHoje;
   final int devolucoesHoje;
-  final int alunosComLivros;
-  final List<EmprestimoItemDetalhado> devolucoesAtrasadasOrdenadas;
+  final List<Emprestimo> devolucoesAtrasadasOrdenadas;
 }
 
 bool _mesmoDia(DateTime a, DateTime b) =>
@@ -27,8 +26,8 @@ bool _mesmoDia(DateTime a, DateTime b) =>
 
 /// Usado só para contar empréstimos/devoluções feitos hoje — o stream de
 /// itens "em aberto" não inclui um item já devolvido no mesmo dia.
-final _todosItensProvider = StreamProvider<List<EmprestimoItemDetalhado>>((ref) {
-  return ref.watch(emprestimoRepositoryProvider).watchTodosItens();
+final _todosItensProvider = StreamProvider<List<Emprestimo>>((ref) {
+  return ref.watch(emprestimoRepositoryProvider).watchTodos();
 });
 
 final dashboardIndicadoresProvider = Provider<AsyncValue<DashboardIndicadores>>((ref) {
@@ -47,19 +46,13 @@ final dashboardIndicadoresProvider = Provider<AsyncValue<DashboardIndicadores>>(
   final todos = historicoAsync.value ?? [];
   final hoje = DateTime.now();
 
-  final atrasados = abertos.where((i) => i.atrasado).toList()
-    ..sort((a, b) =>
-        a.emprestimo.dataPrevistaDevolucao.compareTo(b.emprestimo.dataPrevistaDevolucao));
+  final atrasados = abertos.where((e) => e.atrasado).toList()
+    ..sort((a, b) => a.dataPrevistaDevolucao.compareTo(b.dataPrevistaDevolucao));
 
-  final emprestimosHoje = todos
-      .where((i) => _mesmoDia(i.emprestimo.dataEmprestimo, hoje))
-      .map((i) => i.emprestimo.id)
-      .toSet()
-      .length;
+  final emprestimosHoje = todos.where((e) => _mesmoDia(e.dataEmprestimo, hoje)).length;
   final devolucoesHoje = todos
-      .where((i) => i.item.dataDevolucao != null && _mesmoDia(i.item.dataDevolucao!, hoje))
+      .where((e) => e.dataDevolucao != null && _mesmoDia(e.dataDevolucao!, hoje))
       .length;
-  final alunosComLivros = abertos.map((i) => i.aluno.id).toSet().length;
 
   return AsyncValue.data(
     DashboardIndicadores(
@@ -67,7 +60,6 @@ final dashboardIndicadoresProvider = Provider<AsyncValue<DashboardIndicadores>>(
       atrasados: atrasados.length,
       emprestimosHoje: emprestimosHoje,
       devolucoesHoje: devolucoesHoje,
-      alunosComLivros: alunosComLivros,
       devolucoesAtrasadasOrdenadas: atrasados,
     ),
   );

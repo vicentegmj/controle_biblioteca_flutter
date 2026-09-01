@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/database.dart';
 import '../../core/utils/date_formatters.dart';
-import '../../models/emprestimo_item_detalhado.dart';
+import '../../core/utils/turma_utils.dart';
+import '../../models/emprestimo_extensions.dart';
 import '../../shared/widgets/app_search_field.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/status_badge.dart';
-import '../alunos/aluno_detail_screen.dart';
 import '../emprestimos/emprestimos_providers.dart';
-import '../turmas/turmas_providers.dart';
 import 'historico_providers.dart';
 
 enum _FiltroStatus { todos, aberto, devolvido, atrasado, cancelado }
 
-/// Histórico geral de empréstimos, com filtros por aluno/turma/livro e
-/// situação (seção 4, módulo Histórico).
+/// Histórico geral de empréstimos, com busca livre e filtro estruturado de
+/// turma (série/letra/ano letivo) — seção 12 do escopo.
 class HistoricoScreen extends ConsumerStatefulWidget {
   const HistoricoScreen({super.key});
 
@@ -26,16 +26,21 @@ class HistoricoScreen extends ConsumerStatefulWidget {
 
 class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
   final _buscaController = TextEditingController();
-  int? _turmaId;
+  final _serieController = TextEditingController();
+  final _turmaController = TextEditingController();
+  final _anoController = TextEditingController();
   _FiltroStatus _status = _FiltroStatus.todos;
 
   @override
   void dispose() {
     _buscaController.dispose();
+    _serieController.dispose();
+    _turmaController.dispose();
+    _anoController.dispose();
     super.dispose();
   }
 
-  bool _combinaComStatus(EmprestimoItemDetalhado item) {
+  bool _combinaComStatus(Emprestimo item) {
     switch (_status) {
       case _FiltroStatus.todos:
         return true;
@@ -46,14 +51,23 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
       case _FiltroStatus.atrasado:
         return item.atrasado;
       case _FiltroStatus.cancelado:
-        return item.emprestimo.status == StatusEmprestimo.cancelado;
+        return item.status == StatusEmprestimo.cancelado;
     }
+  }
+
+  bool _combinaComTurmaEstruturada(Emprestimo item) {
+    final serie = int.tryParse(_serieController.text.trim());
+    if (serie != null && item.serie != serie) return false;
+    final letra = _turmaController.text.trim().toUpperCase();
+    if (letra.isNotEmpty && item.turmaLetra != letra) return false;
+    final ano = int.tryParse(_anoController.text.trim());
+    if (ano != null && item.anoLetivo != ano) return false;
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final itensAsync = ref.watch(todosItensProvider);
-    final turmasAsync = ref.watch(turmasListProvider);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -75,26 +89,41 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                 hintText: 'Buscar por aluno, turma ou livro...',
                 onChanged: (_) => setState(() {}),
               ),
-              turmasAsync.maybeWhen(
-                data: (turmas) => SizedBox(
-                  width: 200,
-                  child: DropdownButtonFormField<int?>(
-                    initialValue: _turmaId,
-                    isDense: true,
-                    decoration: const InputDecoration(labelText: 'Turma'),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('Todas')),
-                      ...turmas.map(
-                        (t) => DropdownMenuItem(value: t.id, child: Text(t.nome)),
-                      ),
-                    ],
-                    onChanged: (v) => setState(() => _turmaId = v),
-                  ),
+              SizedBox(
+                width: 90,
+                child: TextField(
+                  controller: _serieController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 1,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(labelText: 'Série', counterText: ''),
+                  onChanged: (_) => setState(() {}),
                 ),
-                orElse: () => const SizedBox.shrink(),
               ),
               SizedBox(
-                width: 200,
+                width: 90,
+                child: TextField(
+                  controller: _turmaController,
+                  maxLength: 1,
+                  textCapitalization: TextCapitalization.characters,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]'))],
+                  decoration: const InputDecoration(labelText: 'Turma', counterText: ''),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              SizedBox(
+                width: 110,
+                child: TextField(
+                  controller: _anoController,
+                  keyboardType: TextInputType.number,
+                  maxLength: 4,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  decoration: const InputDecoration(labelText: 'Ano letivo', counterText: ''),
+                  onChanged: (_) => setState(() {}),
+                ),
+              ),
+              SizedBox(
+                width: 180,
                 child: DropdownButtonFormField<_FiltroStatus>(
                   initialValue: _status,
                   isDense: true,
@@ -115,10 +144,8 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
           Expanded(
             child: itensAsync.when(
               data: (itens) {
-                var filtrados = filtrarItens(itens, _buscaController.text);
-                if (_turmaId != null) {
-                  filtrados = filtrados.where((i) => i.turma.id == _turmaId).toList();
-                }
+                var filtrados = filtrarEmprestimos(itens, _buscaController.text);
+                filtrados = filtrados.where(_combinaComTurmaEstruturada).toList();
                 filtrados = filtrados.where(_combinaComStatus).toList();
 
                 if (filtrados.isEmpty) {
@@ -132,7 +159,6 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                         DataColumn(label: Text('Aluno')),
                         DataColumn(label: Text('Turma')),
                         DataColumn(label: Text('Livro')),
-                        DataColumn(label: Text('Código')),
                         DataColumn(label: Text('Empréstimo')),
                         DataColumn(label: Text('Previsto')),
                         DataColumn(label: Text('Devolvido')),
@@ -140,19 +166,14 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                       ],
                       rows: filtrados.map((item) {
                         return DataRow(
-                          onSelectChanged: (_) => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => AlunoDetailScreen(alunoId: item.aluno.id),
-                            ),
-                          ),
                           cells: [
-                            DataCell(Text(item.aluno.nome)),
-                            DataCell(Text(item.turma.nome)),
-                            DataCell(Text(item.livro.titulo)),
-                            DataCell(Text(item.exemplar.codigo)),
-                            DataCell(Text(formatDate(item.emprestimo.dataEmprestimo))),
-                            DataCell(Text(formatDate(item.emprestimo.dataPrevistaDevolucao))),
-                            DataCell(Text(formatDate(item.item.dataDevolucao))),
+                            DataCell(Text(item.alunoNome)),
+                            DataCell(Text(TurmaUtils.rotuloComAno(
+                                item.serie, item.turmaLetra, item.anoLetivo))),
+                            DataCell(Text(item.livroTitulo)),
+                            DataCell(Text(formatDate(item.dataEmprestimo))),
+                            DataCell(Text(formatDate(item.dataPrevistaDevolucao))),
+                            DataCell(Text(formatDate(item.dataDevolucao))),
                             DataCell(_situacaoBadge(item)),
                           ],
                         );
@@ -173,8 +194,8 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
     );
   }
 
-  Widget _situacaoBadge(EmprestimoItemDetalhado item) {
-    if (item.emprestimo.status == StatusEmprestimo.cancelado) {
+  Widget _situacaoBadge(Emprestimo item) {
+    if (item.status == StatusEmprestimo.cancelado) {
       return const StatusBadge(texto: 'Cancelado', tone: BadgeTone.neutral);
     }
     if (item.devolvido) {

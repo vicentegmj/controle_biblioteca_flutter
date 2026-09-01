@@ -19,21 +19,6 @@ const List<NavDestinationItem> kNavDestinations = [
     selectedIcon: Icons.dashboard,
   ),
   NavDestinationItem(
-    label: 'Alunos',
-    icon: Icons.people_outline,
-    selectedIcon: Icons.people,
-  ),
-  NavDestinationItem(
-    label: 'Turmas',
-    icon: Icons.groups_2_outlined,
-    selectedIcon: Icons.groups_2,
-  ),
-  NavDestinationItem(
-    label: 'Livros',
-    icon: Icons.menu_book_outlined,
-    selectedIcon: Icons.menu_book,
-  ),
-  NavDestinationItem(
     label: 'Novo Empréstimo',
     icon: Icons.add_box_outlined,
     selectedIcon: Icons.add_box,

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router/nav_destination.dart';
 import 'core/router/selected_nav_provider.dart';
-import 'features/alunos/alunos_screen.dart';
 import 'features/atrasados/atrasados_screen.dart';
 import 'features/backup/backup_screen.dart';
 import 'features/configuracoes/configuracoes_providers.dart';
@@ -13,14 +12,9 @@ import 'features/devolucoes/devolucao_screen.dart';
 import 'features/emprestimos/emprestimos_aberto_screen.dart';
 import 'features/emprestimos/novo_emprestimo_screen.dart';
 import 'features/historico/historico_screen.dart';
-import 'features/livros/livros_screen.dart';
-import 'features/turmas/turmas_screen.dart';
 
 const List<Widget> _screens = [
   DashboardScreen(),
-  AlunosScreen(),
-  TurmasScreen(),
-  LivrosScreen(),
   NovoEmprestimoScreen(),
   DevolucaoScreen(),
   EmprestimosAbertoScreen(),
@@ -39,8 +33,8 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(selectedNavIndexProvider);
     final configAsync = ref.watch(configuracaoStreamProvider);
-    final nomeBiblioteca = configAsync.maybeWhen(
-      data: (c) => c['nome_biblioteca'],
+    final nomeEscola = configAsync.maybeWhen(
+      data: (c) => c['nome_escola'],
       orElse: () => null,
     );
 
@@ -50,7 +44,16 @@ class AppShell extends ConsumerWidget {
           children: [
             const Icon(Icons.local_library_outlined),
             const SizedBox(width: 12),
-            Text(nomeBiblioteca?.isNotEmpty == true ? nomeBiblioteca! : 'Biblioteca Escolar'),
+            const Text('Biblioteca Escolar'),
+            if (nomeEscola != null && nomeEscola.isNotEmpty) ...[
+              const SizedBox(width: 8),
+              Text(
+                '— $nomeEscola',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
             const SizedBox(width: 12),
             Text(
               kNavDestinations[selectedIndex].label,

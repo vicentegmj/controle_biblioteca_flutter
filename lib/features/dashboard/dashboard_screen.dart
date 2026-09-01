@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/utils/date_formatters.dart';
+import '../../core/utils/turma_utils.dart';
+import '../../models/emprestimo_extensions.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/status_badge.dart';
-import '../alunos/aluno_detail_screen.dart';
 import '../configuracoes/configuracoes_providers.dart';
 import 'dashboard_providers.dart';
 
-/// Tela inicial com indicadores essenciais (seção 15). Sem gráficos —
+/// Tela inicial com indicadores essenciais (seção 13). Sem gráficos —
 /// apenas números e uma lista curta de devoluções mais atrasadas.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -27,7 +28,7 @@ class DashboardScreen extends ConsumerWidget {
           PageHeader(
             titulo: 'Dashboard',
             subtitulo: configAsync.maybeWhen(
-              data: (config) => config['nome_biblioteca'],
+              data: (config) => config['nome_escola'],
               orElse: () => null,
             ),
           ),
@@ -70,13 +71,6 @@ class DashboardScreen extends ConsumerWidget {
                           icone: Icons.assignment_return,
                           tone: BadgeTone.success,
                         ),
-                        _cardIndicador(
-                          context,
-                          titulo: 'Alunos com livros emprestados',
-                          valor: '${dados.alunosComLivros}',
-                          icone: Icons.people,
-                          tone: BadgeTone.neutral,
-                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -94,18 +88,14 @@ class DashboardScreen extends ConsumerWidget {
                           children: dados.devolucoesAtrasadasOrdenadas.take(10).map((item) {
                             return ListTile(
                               leading: const Icon(Icons.menu_book_outlined),
-                              title: Text('${item.livro.titulo} — ${item.aluno.nome}'),
+                              title: Text('${item.livroTitulo} — ${item.alunoNome}'),
                               subtitle: Text(
-                                '${item.turma.nome} · Previsto: ${formatDate(item.emprestimo.dataPrevistaDevolucao)}',
+                                '${TurmaUtils.rotulo(item.serie, item.turmaLetra)} · '
+                                'Previsto: ${formatDate(item.dataPrevistaDevolucao)}',
                               ),
                               trailing: StatusBadge(
                                 texto: '${item.diasAtraso} dia(s)',
                                 tone: BadgeTone.danger,
-                              ),
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => AlunoDetailScreen(alunoId: item.aluno.id),
-                                ),
                               ),
                             );
                           }).toList(),

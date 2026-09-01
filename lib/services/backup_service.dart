@@ -72,9 +72,9 @@ class BackupService {
       );
       final result = conexao.select(
         "SELECT name FROM sqlite_master WHERE type='table' AND name IN "
-        "('turmas','alunos','livros','exemplares','emprestimos','emprestimo_itens')",
+        "('emprestimos','configuracoes')",
       );
-      return result.length == 6;
+      return result.length == 2;
     } catch (_) {
       return false;
     } finally {

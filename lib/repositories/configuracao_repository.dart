@@ -52,14 +52,4 @@ class ConfiguracaoRepository {
     final valor = await getValor(ConfigKeys.prazoPadraoDias);
     return int.tryParse(valor) ?? 7;
   }
-
-  Future<bool> getBloquearEmprestimoSeAtraso() async {
-    final valor = await getValor(ConfigKeys.bloquearEmprestimoSeAtraso);
-    return valor.toLowerCase() == 'true';
-  }
-
-  Future<int> getMaxEmprestimosSimultaneos() async {
-    final valor = await getValor(ConfigKeys.maxEmprestimosSimultaneos);
-    return int.tryParse(valor) ?? 3;
-  }
 }

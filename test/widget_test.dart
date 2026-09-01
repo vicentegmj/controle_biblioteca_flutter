@@ -33,7 +33,7 @@ void main() {
     }
 
     expect(find.text('Dashboard'), findsWidgets);
-    expect(find.text('Alunos'), findsWidgets);
+    expect(find.text('Novo Empréstimo'), findsWidgets);
 
     // Desmonta a árvore (e a ProviderScope) dentro do próprio teste, com
     // alguns pumps extras, para que os timers de limpeza que o Drift agenda

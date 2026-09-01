@@ -5,15 +5,14 @@ e devoluções de livros de uma biblioteca escolar.
 
 ## Objetivo
 
-O sistema controla **quem pegou qual livro, quando pegou, quando deveria
-devolver e quando devolveu**. Não é um sistema de gestão de acervo: não há
-controle de estoque, aquisição, financeiro, patrimonial ou de fornecedores.
-O cadastro de livros/exemplares existe apenas para identificar o que foi
-emprestado.
+O sistema controla **quem pegou qual livro, de qual turma, quando pegou,
+quando deveria devolver e quando devolveu**. Não é um sistema de gestão de
+acervo, e não exige nenhum cadastro prévio: aluno, turma e livro são
+informados livremente a cada empréstimo, com sugestões vindas do próprio
+histórico.
 
-Módulos: Dashboard, Alunos, Turmas, Livros (com exemplares), Novo Empréstimo,
-Devolução, Empréstimos em Aberto, Atrasados, Histórico, Configurações e
-Backup.
+Módulos: Dashboard, Novo Empréstimo, Devolução, Empréstimos em Aberto,
+Atrasados, Histórico, Configurações e Backup.
 
 ## Requisitos
 
@@ -49,12 +48,14 @@ fica no diretório de dados do aplicativo (obtido via `path_provider`,
 tipicamente `%APPDATA%/com.biblioteca.controle_biblioteca/`), não dentro da
 pasta do projeto. Logs técnicos ficam em `logs/app.log` no mesmo diretório.
 
-O schema é normalizado em: `turmas`, `alunos`, `livros`, `exemplares`,
-`emprestimos`, `emprestimo_itens`, `configuracoes`. Um empréstimo pode ter
-vários itens (exemplares), e cada item é devolvido individualmente; o
-empréstimo só é encerrado quando todos os itens forem devolvidos. Atraso não
-é armazenado — é calculado a partir de `data_prevista_devolucao` dos itens
-ainda em aberto.
+O schema tem apenas duas tabelas: `emprestimos` e `configuracoes`. Não há
+cadastros de alunos, turmas ou livros — cada empréstimo é um registro
+autocontido com `aluno_nome`, `serie` (1 a 9), `turma_letra` (A, B, C...),
+`ano_letivo` (derivado automaticamente do ano de `data_emprestimo`, nunca
+digitado), `livro_titulo`, datas e status. Atraso não é armazenado — é
+calculado a partir de `data_prevista_devolucao` dos empréstimos ainda em
+aberto. As sugestões de autocomplete de aluno/livro são consultas
+`SELECT DISTINCT ... LIKE ?` diretamente sobre o histórico de empréstimos.
 
 ## Como fazer backup
 
@@ -75,28 +76,28 @@ carregar os dados restaurados.
 flutter test
 ```
 
-Os testes priorizam as regras de negócio (`test/services`,
-`test/repositories`): impedir empréstimo duplicado de um mesmo exemplar,
-bloquear aluno/exemplar inativo, devolução total e parcial, cálculo de
-atraso, limite de empréstimos simultâneos, bloqueio por atraso, cancelamento
-e preservação de histórico.
+Os testes priorizam as regras de negócio (`test/services`): validação dos
+campos obrigatórios, letra da turma normalizada para maiúscula, ano letivo
+derivado da data do empréstimo, cálculo da data prevista pelo prazo padrão,
+devolução e cancelamento (com suas restrições de estado), cálculo de atraso,
+preservação do histórico, e as sugestões de autocomplete (distintas,
+case-insensitive, por trecho do texto).
 
 ## Estrutura do projeto
 
 ```
 lib/
   core/          # banco de dados (Drift), tema, utilitários, navegação
-  models/        # DTOs de leitura que combinam dados de várias tabelas
-  repositories/  # acesso a dados (uma classe por tabela/agregado)
+  models/        # extensões com propriedades calculadas (ex.: atraso)
+  repositories/  # acesso a dados (EmprestimoRepository, ConfiguracaoRepository)
   services/      # regras de negócio (empréstimo, backup, log)
-  features/      # uma pasta por tela (dashboard, alunos, turmas, livros,
-                 # emprestimos, devolucoes, atrasados, historico,
-                 # configuracoes, backup), cada uma com seus providers
-                 # Riverpod e widgets
-  shared/widgets/# widgets reaproveitados entre telas
+  features/      # uma pasta por tela (dashboard, emprestimos, devolucoes,
+                 # atrasados, historico, configuracoes, backup), cada uma
+                 # com seus providers Riverpod e widgets
+  shared/widgets/# widgets reaproveitados entre telas (inclui o SuggestField,
+                 # o campo de autocomplete usado em Aluno e Livro)
 test/
   services/      # testes das regras de negócio (prioridade)
-  repositories/  # testes de acesso a dados e restrições de unicidade
 ```
 
 ## Pacotes principais e motivo da escolha
@@ -114,20 +115,37 @@ test/
 
 ## Decisões técnicas relevantes
 
-- **Leitor de código de barras USB**: tratado como teclado comum — os campos
-  de código nas telas de Empréstimo/Devolução reagem ao evento de "Enter"
-  (`onSubmitted`), sem depender de nenhuma biblioteca ou marca específica.
-- **Status de atraso não persistido**: um item é considerado atrasado apenas
-  em tempo de consulta (`data_prevista_devolucao` no passado e item ainda
-  sem devolução), evitando redundância de dados que poderia ficar
-  dessincronizada.
-- **Restauração de backup exige reiniciar o app**: como o banco é uma
-  conexão SQLite única mantida durante toda a execução, a restauração fecha
-  essa conexão e substitui o arquivo; a interface informa isso claramente ao
+- **Sem cadastros prévios**: por decisão explícita de escopo, o sistema não
+  mantém tabelas de alunos, turmas ou livros. Cada empréstimo grava esses
+  dados diretamente. Isso significa que não há como "editar" o nome de um
+  aluno em todos os empréstimos antigos de uma vez, nem impedir duas grafias
+  diferentes do mesmo nome — é uma troca deliberada de simplicidade por
+  rigidez, aceitável para o objetivo de apenas registrar quem pegou o quê.
+- **Turma estruturada, mas sem cadastro**: `serie` e `turma_letra` são campos
+  próprios (não uma string livre) para permitir filtros exatos no Histórico;
+  o `ano_letivo` nunca é digitado, é sempre `ano(data_emprestimo)`.
+- **Autocomplete via consulta direta**: as sugestões de aluno/livro usam
+  `SELECT DISTINCT coluna FROM emprestimos WHERE coluna LIKE '%termo%' LIMIT
+  10`, sem carregar todo o histórico em memória.
+- **Leitor de código de barras USB**: não se aplica mais a um campo de código
+  de exemplar (não existe mais exemplar/código); o fluxo rápido agora depende
+  do autocomplete por nome/título.
+- **Status de atraso não persistido**: um empréstimo é considerado atrasado
+  apenas em tempo de consulta (`data_prevista_devolucao` no passado e ainda
+  não devolvido), evitando redundância de dados que poderia dessincronizar.
+- **Restauração de backup exige reiniciar o app**: como o banco é uma conexão
+  SQLite única mantida durante toda a execução, a restauração fecha essa
+  conexão e substitui o arquivo; a interface informa isso claramente ao
   usuário ao final da operação.
-- **Sem controle de estoque**: times de exemplares fisicos existem apenas
-  para permitir identificar qual cópia foi emprestada; a "disponibilidade" é
-  sempre derivada dos empréstimos em aberto, nunca de um contador.
+
+## Histórico do projeto
+
+A primeira versão deste sistema incluía cadastros completos de alunos,
+turmas, livros e exemplares (com controle de disponibilidade por exemplar
+físico). Essa versão foi deliberadamente substituída por decisão de escopo
+posterior, em favor de um modelo mais simples sem cadastros. O ponto do
+histórico do Git anterior a essa mudança está marcado com a tag
+`v1-cadastros-completos`, caso seja necessário consultá-lo.
 
 ## Pendências conhecidas
 
@@ -137,3 +155,7 @@ test/
 - A restauração de backup não recarrega o banco em tempo real dentro da
   mesma sessão do app; é necessário reiniciar a aplicação manualmente após
   restaurar (ver decisão técnica acima).
+- Como não há cadastro de aluno/turma/livro, nomes digitados de forma
+  inconsistente (ex.: "João Silva" vs. "joão silva ") geram sugestões
+  separadas — não há normalização/deduplicação além de correspondência
+  exata de texto.

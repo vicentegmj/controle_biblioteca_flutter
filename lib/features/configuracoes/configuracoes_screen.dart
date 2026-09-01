@@ -9,7 +9,7 @@ import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/page_header.dart';
 import 'configuracoes_providers.dart';
 
-/// Tela de configurações do sistema (seção 18).
+/// Tela de configurações do sistema — mantém apenas o essencial (seção 14).
 class ConfiguracoesScreen extends ConsumerStatefulWidget {
   const ConfiguracoesScreen({super.key});
 
@@ -19,10 +19,7 @@ class ConfiguracoesScreen extends ConsumerStatefulWidget {
 
 class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
   final _nomeEscolaController = TextEditingController();
-  final _nomeBibliotecaController = TextEditingController();
   final _prazoController = TextEditingController();
-  final _maxEmprestimosController = TextEditingController();
-  bool _bloquearSeAtraso = true;
   String _diretorioBackup = '';
   bool _carregado = false;
   bool _salvando = false;
@@ -30,9 +27,7 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
   @override
   void dispose() {
     _nomeEscolaController.dispose();
-    _nomeBibliotecaController.dispose();
     _prazoController.dispose();
-    _maxEmprestimosController.dispose();
     super.dispose();
   }
 
@@ -40,10 +35,7 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
     if (_carregado) return;
     _carregado = true;
     _nomeEscolaController.text = config[ConfigKeys.nomeEscola] ?? '';
-    _nomeBibliotecaController.text = config[ConfigKeys.nomeBiblioteca] ?? '';
     _prazoController.text = config[ConfigKeys.prazoPadraoDias] ?? '7';
-    _maxEmprestimosController.text = config[ConfigKeys.maxEmprestimosSimultaneos] ?? '3';
-    _bloquearSeAtraso = config[ConfigKeys.bloquearEmprestimoSeAtraso] == 'true';
     _diretorioBackup = config[ConfigKeys.diretorioBackup] ?? '';
   }
 
@@ -56,13 +48,8 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
 
   Future<void> _salvar() async {
     final prazo = int.tryParse(_prazoController.text.trim());
-    final max = int.tryParse(_maxEmprestimosController.text.trim());
     if (prazo == null || prazo <= 0) {
       showAppSnackBar(context, 'Informe um prazo padrão válido (em dias).', erro: true);
-      return;
-    }
-    if (max == null || max <= 0) {
-      showAppSnackBar(context, 'Informe um limite de empréstimos simultâneos válido.', erro: true);
       return;
     }
 
@@ -70,10 +57,7 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
     try {
       await ref.read(configuracaoRepositoryProvider).setValores({
         ConfigKeys.nomeEscola: _nomeEscolaController.text.trim(),
-        ConfigKeys.nomeBiblioteca: _nomeBibliotecaController.text.trim(),
         ConfigKeys.prazoPadraoDias: prazo.toString(),
-        ConfigKeys.maxEmprestimosSimultaneos: max.toString(),
-        ConfigKeys.bloquearEmprestimoSeAtraso: _bloquearSeAtraso.toString(),
         ConfigKeys.diretorioBackup: _diretorioBackup,
       });
       if (mounted) showAppSnackBar(context, 'Configurações salvas com sucesso.');
@@ -117,46 +101,18 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
                               controller: _nomeEscolaController,
                               decoration: const InputDecoration(labelText: 'Nome da escola'),
                             ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: _nomeBibliotecaController,
-                              decoration: const InputDecoration(labelText: 'Nome da biblioteca'),
-                            ),
                             const SizedBox(height: 24),
-                            Text('Regras de empréstimo', style: Theme.of(context).textTheme.titleMedium),
+                            Text('Empréstimo', style: Theme.of(context).textTheme.titleMedium),
                             const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _prazoController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Prazo padrão de empréstimo (dias)',
-                                    ),
-                                  ),
+                            SizedBox(
+                              width: 280,
+                              child: TextField(
+                                controller: _prazoController,
+                                keyboardType: TextInputType.number,
+                                decoration: const InputDecoration(
+                                  labelText: 'Prazo padrão de empréstimo (dias)',
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: TextField(
-                                    controller: _maxEmprestimosController,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Máx. empréstimos simultâneos por aluno',
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            SwitchListTile(
-                              contentPadding: EdgeInsets.zero,
-                              title: const Text('Bloquear novo empréstimo se houver atraso'),
-                              subtitle: const Text(
-                                'Impede que um aluno com empréstimo atrasado realize novos empréstimos.',
                               ),
-                              value: _bloquearSeAtraso,
-                              onChanged: (v) => setState(() => _bloquearSeAtraso = v),
                             ),
                             const SizedBox(height: 24),
                             Text('Backup', style: Theme.of(context).textTheme.titleMedium),

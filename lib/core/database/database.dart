@@ -7,21 +7,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sqlite3_flutter_libs/sqlite3_flutter_libs.dart';
 
-import 'tables/alunos_table.dart';
 import 'tables/configuracoes_table.dart';
-import 'tables/emprestimo_itens_table.dart';
 import 'tables/emprestimos_table.dart';
-import 'tables/exemplares_table.dart';
-import 'tables/livros_table.dart';
-import 'tables/turmas_table.dart';
 
-export 'tables/alunos_table.dart';
 export 'tables/configuracoes_table.dart';
-export 'tables/emprestimo_itens_table.dart';
 export 'tables/emprestimos_table.dart';
-export 'tables/exemplares_table.dart';
-export 'tables/livros_table.dart';
-export 'tables/turmas_table.dart';
 
 part 'database.g.dart';
 
@@ -42,31 +32,39 @@ Future<File> resolveDatabaseFile() async {
   return File(p.join(dir.path, kDatabaseFileName));
 }
 
-@DriftDatabase(
-  tables: [
-    Turmas,
-    Alunos,
-    Livros,
-    Exemplares,
-    Emprestimos,
-    EmprestimoItens,
-    Configuracoes,
-  ],
-)
+@DriftDatabase(tables: [Emprestimos, Configuracoes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   /// Cria um banco em memória, útil para testes.
-  factory AppDatabase.forTesting() =>
-      AppDatabase(NativeDatabase.memory());
+  factory AppDatabase.forTesting() => AppDatabase(NativeDatabase.memory());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (Migrator m) async {
           await m.createAll();
+        },
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            // Versão 1 mantinha cadastros de turmas/alunos/livros/exemplares
+            // e um empréstimo com múltiplos itens. O escopo foi simplificado
+            // para um único registro de empréstimo autocontido (sem
+            // cadastros prévios), então o schema antigo é descartado.
+            for (final tabela in [
+              'emprestimo_itens',
+              'emprestimos',
+              'exemplares',
+              'livros',
+              'alunos',
+              'turmas',
+            ]) {
+              await customStatement('DROP TABLE IF EXISTS $tabela');
+            }
+            await m.createAll();
+          }
         },
         beforeOpen: (OpeningDetails details) async {
           await customStatement('PRAGMA foreign_keys = ON');
