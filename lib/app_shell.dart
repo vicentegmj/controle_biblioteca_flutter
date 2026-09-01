@@ -41,12 +41,13 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.local_library_outlined),
             const SizedBox(width: 12),
             const Text('Biblioteca Escolar'),
             if (nomeEscola != null && nomeEscola.isNotEmpty) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Text(
                 '— $nomeEscola',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -54,13 +55,6 @@ class AppShell extends ConsumerWidget {
                     ),
               ),
             ],
-            const SizedBox(width: 12),
-            Text(
-              kNavDestinations[selectedIndex].label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
           ],
         ),
       ),

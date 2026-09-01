@@ -32,9 +32,10 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: false,
-        titleTextStyle: const TextStyle(
+        titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w600,
+          color: scheme.onSurface,
         ),
       ),
       navigationRailTheme: NavigationRailThemeData(
