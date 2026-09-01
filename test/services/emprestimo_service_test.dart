@@ -72,6 +72,16 @@ void main() {
       expect(emprestimo!.turmaLetra, 'A');
     });
 
+    test('normaliza nome do aluno e título do livro para Title Case', () async {
+      final id = await registrar(
+        alunoNome: 'vicente  garcia',
+        livroTitulo: 'o PEQUENO príncipe',
+      );
+      final emprestimo = await repository.getById(id);
+      expect(emprestimo!.alunoNome, 'Vicente Garcia');
+      expect(emprestimo.livroTitulo, 'O Pequeno Príncipe');
+    });
+
     test('rejeita data prevista anterior à data do empréstimo', () {
       final hoje = DateTime(2026, 9, 10);
       expect(
@@ -188,7 +198,7 @@ void main() {
       await registrar(livroTitulo: 'Dom Casmurro');
 
       final sugestoes = await repository.sugerirLivros('pedra');
-      expect(sugestoes, ['Harry Potter e a Pedra Filosofal']);
+      expect(sugestoes, ['Harry Potter E A Pedra Filosofal']);
     });
 
     test('não sugere nada para busca vazia', () async {

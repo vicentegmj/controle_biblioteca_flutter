@@ -7,6 +7,7 @@ import '../../core/utils/date_formatters.dart';
 import '../../core/utils/domain_exception.dart';
 import '../../core/utils/turma_utils.dart';
 import '../../shared/widgets/app_snackbar.dart';
+import '../../shared/widgets/confirm_dialog.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/suggest_field.dart';
 
@@ -105,6 +106,16 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
     if (_dataPrevista == null) {
       await _recalcularDataPrevista();
     }
+    if (!mounted) return;
+
+    final confirmado = await showConfirmDialog(
+      context,
+      titulo: 'Confirmar empréstimo',
+      mensagem: 'Registrar empréstimo de "${_livroController.text.trim()}" '
+          'para ${_alunoController.text.trim()} ($serie${_turmaController.text.trim().toUpperCase()})?',
+      textoConfirmar: 'Registrar',
+    );
+    if (!confirmado) return;
 
     setState(() => _salvando = true);
     try {

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart' show Value;
 
 import '../core/database/database.dart';
 import '../core/utils/domain_exception.dart';
+import '../core/utils/text_utils.dart';
 import '../core/utils/turma_utils.dart';
 import '../repositories/configuracao_repository.dart';
 import '../repositories/emprestimo_repository.dart';
@@ -49,8 +50,8 @@ class EmprestimoService {
     required DateTime dataPrevistaDevolucao,
     String? observacao,
   }) async {
-    final aluno = alunoNome.trim();
-    final livro = livroTitulo.trim();
+    final aluno = toTitleCase(alunoNome);
+    final livro = toTitleCase(livroTitulo);
     final letra = turmaLetra.trim().toUpperCase();
 
     if (aluno.isEmpty) {

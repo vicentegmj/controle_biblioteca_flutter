@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database/repository_providers.dart';
 import '../../core/utils/config_keys.dart';
 import '../../shared/widgets/app_snackbar.dart';
+import '../../shared/widgets/confirm_dialog.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/page_header.dart';
 import 'configuracoes_providers.dart';
@@ -52,6 +53,14 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
       showAppSnackBar(context, 'Informe um prazo padrão válido (em dias).', erro: true);
       return;
     }
+
+    final confirmado = await showConfirmDialog(
+      context,
+      titulo: 'Salvar configurações',
+      mensagem: 'Confirmar a gravação das novas configurações do sistema?',
+      textoConfirmar: 'Salvar',
+    );
+    if (!confirmado) return;
 
     setState(() => _salvando = true);
     try {

@@ -161,12 +161,18 @@ class _SuggestFieldState extends State<SuggestField> {
               itemCount: _sugestoes.length,
               itemBuilder: (context, index) {
                 final destacado = index == _destacado;
+                // Captura o valor agora (não o índice): se a lista de
+                // sugestões mudar entre este build e o toque do usuário
+                // (nova busca concluída), o callback ainda deve selecionar
+                // exatamente o texto que estava sendo exibido, em vez de
+                // reindexar uma lista que pode ter encolhido.
+                final valor = _sugestoes[index];
                 return Material(
                   color: destacado ? scheme.primaryContainer : Colors.transparent,
                   child: ListTile(
                     dense: true,
-                    title: Text(_sugestoes[index]),
-                    onTap: () => _selecionar(_sugestoes[index]),
+                    title: Text(valor),
+                    onTap: () => _selecionar(valor),
                   ),
                 );
               },

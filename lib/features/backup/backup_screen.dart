@@ -26,6 +26,14 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   String? _ultimoResultado;
 
   Future<void> _fazerBackup() async {
+    final confirmado = await showConfirmDialog(
+      context,
+      titulo: 'Fazer backup',
+      mensagem: 'Confirmar a geração de um novo backup do banco de dados atual?',
+      textoConfirmar: 'Fazer backup',
+    );
+    if (!confirmado) return;
+
     setState(() => _executando = true);
     try {
       final config = ref.read(configuracaoRepositoryProvider);
