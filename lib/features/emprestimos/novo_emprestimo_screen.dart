@@ -70,6 +70,7 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
       _sugestoesAluno = [];
       _alunoBuscaController.clear();
     });
+    _codigoFocusNode.requestFocus();
   }
 
   Future<void> _adicionarExemplarPorCodigo(String codigo) async {
@@ -314,7 +315,6 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
             TextField(
               controller: _codigoController,
               focusNode: _codigoFocusNode,
-              autofocus: true,
               decoration: const InputDecoration(
                 labelText: 'Código ou código de barras',
                 hintText: 'Leia com o leitor ou digite e pressione Enter',
