@@ -107,7 +107,7 @@ class _DevolucaoScreenState extends ConsumerState<DevolucaoScreen> {
                       DataColumn2(label: Text('Empréstimo')),
                       DataColumn2(label: Text('Previsto')),
                       DataColumn2(label: Text('Situação')),
-                      DataColumn2(label: Text('Ações'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Ações'), fixedWidth: 76),
                     ],
                     rows: filtrados.map((item) {
                       return DataRow(
@@ -135,12 +135,15 @@ class _DevolucaoScreenState extends ConsumerState<DevolucaoScreen> {
                                   ),
                           ),
                           DataCell(
-                            FilledButton.icon(
+                            IconButton.filledTonal(
+                              tooltip: 'Confirmar devolução',
                               onPressed: _confirmando
                                   ? null
                                   : () => _confirmarDevolucao(item),
-                              icon: const Icon(Icons.check, size: 18),
-                              label: const Text('Confirmar Devolução'),
+                              icon: const Icon(
+                                Icons.assignment_return_outlined,
+                                size: 20,
+                              ),
                             ),
                           ),
                         ],

@@ -1,3 +1,4 @@
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,7 +97,10 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 1,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(labelText: 'Série', counterText: ''),
+                  decoration: const InputDecoration(
+                    labelText: 'Série',
+                    counterText: '',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -106,8 +110,13 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                   controller: _turmaController,
                   maxLength: 1,
                   textCapitalization: TextCapitalization.characters,
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]'))],
-                  decoration: const InputDecoration(labelText: 'Turma', counterText: ''),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'Turma',
+                    counterText: '',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -118,7 +127,10 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                   keyboardType: TextInputType.number,
                   maxLength: 4,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  decoration: const InputDecoration(labelText: 'Ano letivo', counterText: ''),
+                  decoration: const InputDecoration(
+                    labelText: 'Ano letivo',
+                    counterText: '',
+                  ),
                   onChanged: (_) => setState(() {}),
                 ),
               ),
@@ -129,13 +141,29 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
                   isDense: true,
                   decoration: const InputDecoration(labelText: 'Situação'),
                   items: const [
-                    DropdownMenuItem(value: _FiltroStatus.todos, child: Text('Todos')),
-                    DropdownMenuItem(value: _FiltroStatus.aberto, child: Text('Em aberto')),
-                    DropdownMenuItem(value: _FiltroStatus.devolvido, child: Text('Devolvidos')),
-                    DropdownMenuItem(value: _FiltroStatus.atrasado, child: Text('Atrasados')),
-                    DropdownMenuItem(value: _FiltroStatus.cancelado, child: Text('Cancelados')),
+                    DropdownMenuItem(
+                      value: _FiltroStatus.todos,
+                      child: Text('Todos'),
+                    ),
+                    DropdownMenuItem(
+                      value: _FiltroStatus.aberto,
+                      child: Text('Em aberto'),
+                    ),
+                    DropdownMenuItem(
+                      value: _FiltroStatus.devolvido,
+                      child: Text('Devolvidos'),
+                    ),
+                    DropdownMenuItem(
+                      value: _FiltroStatus.atrasado,
+                      child: Text('Atrasados'),
+                    ),
+                    DropdownMenuItem(
+                      value: _FiltroStatus.cancelado,
+                      child: Text('Cancelados'),
+                    ),
                   ],
-                  onChanged: (v) => setState(() => _status = v ?? _FiltroStatus.todos),
+                  onChanged: (v) =>
+                      setState(() => _status = v ?? _FiltroStatus.todos),
                 ),
               ),
             ],
@@ -144,41 +172,57 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
           Expanded(
             child: itensAsync.when(
               data: (itens) {
-                var filtrados = filtrarEmprestimos(itens, _buscaController.text);
-                filtrados = filtrados.where(_combinaComTurmaEstruturada).toList();
+                var filtrados = filtrarEmprestimos(
+                  itens,
+                  _buscaController.text,
+                );
+                filtrados = filtrados
+                    .where(_combinaComTurmaEstruturada)
+                    .toList();
                 filtrados = filtrados.where(_combinaComStatus).toList();
 
                 if (filtrados.isEmpty) {
-                  return const EmptyState(mensagem: 'Nenhum registro encontrado.');
+                  return const EmptyState(
+                    mensagem: 'Nenhum registro encontrado.',
+                  );
                 }
                 return Card(
                   clipBehavior: Clip.antiAlias,
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Aluno')),
-                        DataColumn(label: Text('Turma')),
-                        DataColumn(label: Text('Livro')),
-                        DataColumn(label: Text('Empréstimo')),
-                        DataColumn(label: Text('Previsto')),
-                        DataColumn(label: Text('Devolvido')),
-                        DataColumn(label: Text('Situação')),
-                      ],
-                      rows: filtrados.map((item) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(item.alunoNome)),
-                            DataCell(Text(TurmaUtils.rotuloComAno(
-                                item.serie, item.turmaLetra, item.anoLetivo))),
-                            DataCell(Text(item.livroTitulo)),
-                            DataCell(Text(formatDate(item.dataEmprestimo))),
-                            DataCell(Text(formatDate(item.dataPrevistaDevolucao))),
-                            DataCell(Text(formatDate(item.dataDevolucao))),
-                            DataCell(_situacaoBadge(item)),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                  child: DataTable2(
+                    fixedTopRows: 1,
+                    minWidth: 950,
+                    columns: const [
+                      DataColumn2(label: Text('Aluno'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Turma')),
+                      DataColumn2(label: Text('Livro'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Empréstimo')),
+                      DataColumn2(label: Text('Previsto')),
+                      DataColumn2(label: Text('Devolvido')),
+                      DataColumn2(label: Text('Situação')),
+                    ],
+                    rows: filtrados.map((item) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(item.alunoNome)),
+                          DataCell(
+                            Text(
+                              TurmaUtils.rotuloComAno(
+                                item.serie,
+                                item.turmaLetra,
+                                item.anoLetivo,
+                              ),
+                            ),
+                          ),
+                          DataCell(Text(item.livroTitulo)),
+                          DataCell(Text(formatDate(item.dataEmprestimo))),
+                          DataCell(
+                            Text(formatDate(item.dataPrevistaDevolucao)),
+                          ),
+                          DataCell(Text(formatDate(item.dataDevolucao))),
+                          DataCell(_situacaoBadge(item)),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 );
               },
@@ -202,7 +246,10 @@ class _HistoricoScreenState extends ConsumerState<HistoricoScreen> {
       return const StatusBadge(texto: 'Devolvido', tone: BadgeTone.success);
     }
     if (item.atrasado) {
-      return StatusBadge(texto: 'Atrasado (${item.diasAtraso}d)', tone: BadgeTone.danger);
+      return StatusBadge(
+        texto: 'Atrasado (${item.diasAtraso}d)',
+        tone: BadgeTone.danger,
+      );
     }
     return const StatusBadge(texto: 'Em aberto', tone: BadgeTone.info);
   }

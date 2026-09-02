@@ -16,28 +16,37 @@ class PageHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(titulo, style: Theme.of(context).textTheme.titleLarge),
-              if (subtitulo != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  subtitulo!,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
-            ],
-          ),
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.only(left: 14),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(color: theme.colorScheme.secondary, width: 4),
         ),
-        ...actions,
-      ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(titulo, style: theme.textTheme.titleLarge),
+                if (subtitulo != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitulo!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          ...actions,
+        ],
+      ),
     );
   }
 }

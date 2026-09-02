@@ -130,23 +130,51 @@ class DashboardScreen extends ConsumerWidget {
     required IconData icone,
     required BadgeTone tone,
   }) {
+    final scheme = Theme.of(context).colorScheme;
+    final (background, foreground) = switch (tone) {
+      BadgeTone.danger => (const Color(0xFFFFE5E2), const Color(0xFFAA2E25)),
+      BadgeTone.success => (const Color(0xFFDDF1E5), const Color(0xFF28734A)),
+      BadgeTone.warning => (const Color(0xFFFFEFCF), const Color(0xFF805B00)),
+      _ => (scheme.primaryContainer, scheme.primary),
+    };
     return SizedBox(
-      width: 220,
+      width: 238,
+      height: 126,
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.all(18),
+          child: Row(
             children: [
-              Icon(icone, size: 28),
-              const SizedBox(height: 12),
-              Text(
-                valor,
-                style: Theme.of(context).textTheme.titleLarge
-                    ?.copyWith(fontSize: 28),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: background,
+                  borderRadius: BorderRadius.circular(7),
+                ),
+                child: Icon(icone, size: 23, color: foreground),
               ),
-              const SizedBox(height: 4),
-              Text(titulo, style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      valor,
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(fontSize: 30, color: foreground),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      titulo,
+                      maxLines: 2,
+                      style: Theme.of(context).textTheme.bodyMedium
+                          ?.copyWith(color: scheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),

@@ -36,8 +36,10 @@ class AppSearchField extends StatelessWidget {
         textInputAction: TextInputAction.search,
         decoration: InputDecoration(
           hintText: hintText,
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: const Icon(Icons.search, size: 20),
           isDense: true,
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surface,
           suffixIcon: ValueListenableBuilder<TextEditingValue>(
             valueListenable: controller,
             builder: (context, value, _) {

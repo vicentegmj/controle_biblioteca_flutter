@@ -42,19 +42,35 @@ class AppShell extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
+        shape: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.local_library_outlined),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondary,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Icon(
+                Icons.local_library_outlined,
+                color: Colors.white,
+                size: 21,
+              ),
+            ),
             const SizedBox(width: 12),
             const Text('Biblioteca Escolar'),
             if (nomeEscola != null && nomeEscola.isNotEmpty) ...[
               const SizedBox(width: 6),
               Text(
-                '— $nomeEscola',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                '|  $nomeEscola',
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: Colors.white70),
               ),
             ],
           ],
@@ -67,7 +83,6 @@ class AppShell extends ConsumerWidget {
             onSelected: (i) =>
                 ref.read(selectedNavIndexProvider.notifier).state = i,
           ),
-          const VerticalDivider(width: 1),
           Expanded(
             child: IndexedStack(index: selectedIndex, children: _screens),
           ),
@@ -77,7 +92,7 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-/// Menu lateral compacto: com 11 destinos, o `NavigationRail` padrão do
+/// Menu lateral compacto: com vários destinos, o `NavigationRail` padrão do
 /// Material (rótulos visíveis) ultrapassa a altura disponível na resolução
 /// mínima alvo (1366x768). Este widget usa itens mais baixos para caber
 /// todos sem cortar nenhum, com `ListView` como rede de segurança (rola em
@@ -92,56 +107,85 @@ class _SideNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      width: 96,
-      color: scheme.surface,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        itemCount: kNavDestinations.length,
-        itemBuilder: (context, index) {
-          final destino = kNavDestinations[index];
-          final selecionado = index == selectedIndex;
-          final cor = selecionado ? scheme.primary : scheme.onSurfaceVariant;
-          return InkWell(
-            onTap: () => onSelected(index),
-            child: SizedBox(
-              height: 52,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 2,
-                    ),
+      width: 108,
+      color: const Color(0xFF173E3C),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: const Border(right: BorderSide(color: Color(0xFF315653))),
+        ),
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+          itemCount: kNavDestinations.length,
+          itemBuilder: (context, index) {
+            final destino = kNavDestinations[index];
+            final selecionado = index == selectedIndex;
+            final cor = selecionado
+                ? scheme.onSecondaryContainer
+                : const Color(0xFFD4E1DE);
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 3),
+              child: Tooltip(
+                message: destino.label,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () => onSelected(index),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 160),
+                    height: 52,
                     decoration: BoxDecoration(
-                      color: selecionado ? scheme.primaryContainer : null,
-                      borderRadius: BorderRadius.circular(14),
+                      color: selecionado ? scheme.secondaryContainer : null,
+                      borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Icon(
-                      selecionado ? destino.selectedIcon : destino.icon,
-                      color: cor,
-                      size: 20,
+                    child: Stack(
+                      children: [
+                        if (selecionado)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              width: 3,
+                              height: 28,
+                              decoration: BoxDecoration(
+                                color: scheme.secondary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                selecionado
+                                    ? destino.selectedIcon
+                                    : destino.icon,
+                                color: cor,
+                                size: 20,
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                destino.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: cor,
+                                  fontWeight: selecionado
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    destino.label,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: cor,
-                      fontWeight: selecionado
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
