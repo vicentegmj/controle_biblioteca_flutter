@@ -41,6 +41,19 @@ flutter build windows
 
 O executável fica em `build/windows/x64/runner/Release/`.
 
+## Como gerar o instalador Windows
+
+Com o Inno Setup 6 instalado, execute no PowerShell:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File installer\build_installer.ps1
+```
+
+O script gera o build Release e cria
+`dist/BibliotecaEscolar-Setup-1.0.0.exe`. O instalador é instalado por usuário,
+não exige permissão de administrador e oferece um atalho opcional na área
+de trabalho. O banco de dados do usuário não é removido na desinstalação.
+
 ## Banco de dados
 
 SQLite local, acessado via [Drift](https://drift.simonbinder.eu/). O arquivo
