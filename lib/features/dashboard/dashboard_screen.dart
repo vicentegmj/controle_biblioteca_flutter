@@ -74,7 +74,10 @@ class DashboardScreen extends ConsumerWidget {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    Text('Devoluções atrasadas', style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      'Devoluções atrasadas',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 12),
                     if (dados.devolucoesAtrasadasOrdenadas.isEmpty)
                       const EmptyState(
@@ -85,10 +88,14 @@ class DashboardScreen extends ConsumerWidget {
                       Card(
                         clipBehavior: Clip.antiAlias,
                         child: Column(
-                          children: dados.devolucoesAtrasadasOrdenadas.take(10).map((item) {
+                          children: dados.devolucoesAtrasadasOrdenadas.map((
+                            item,
+                          ) {
                             return ListTile(
                               leading: const Icon(Icons.menu_book_outlined),
-                              title: Text('${item.livroTitulo} — ${item.alunoNome}'),
+                              title: Text(
+                                '${item.livroTitulo} — ${item.alunoNome}',
+                              ),
                               subtitle: Text(
                                 '${TurmaUtils.rotulo(item.serie, item.turmaLetra)} · '
                                 'Previsto: ${formatDate(item.dataPrevistaDevolucao)}',
@@ -133,7 +140,11 @@ class DashboardScreen extends ConsumerWidget {
             children: [
               Icon(icone, size: 28),
               const SizedBox(height: 12),
-              Text(valor, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 28)),
+              Text(
+                valor,
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontSize: 28),
+              ),
               const SizedBox(height: 4),
               Text(titulo, style: Theme.of(context).textTheme.bodyMedium),
             ],

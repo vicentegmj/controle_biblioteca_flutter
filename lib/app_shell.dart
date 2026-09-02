@@ -12,6 +12,7 @@ import 'features/devolucoes/devolucao_screen.dart';
 import 'features/emprestimos/emprestimos_aberto_screen.dart';
 import 'features/emprestimos/novo_emprestimo_screen.dart';
 import 'features/historico/historico_screen.dart';
+import 'features/relatorios/relatorios_screen.dart';
 
 const List<Widget> _screens = [
   DashboardScreen(),
@@ -20,6 +21,7 @@ const List<Widget> _screens = [
   EmprestimosAbertoScreen(),
   AtrasadosScreen(),
   HistoricoScreen(),
+  RelatoriosScreen(),
   ConfiguracoesScreen(),
   BackupScreen(),
 ];
@@ -51,8 +53,8 @@ class AppShell extends ConsumerWidget {
               Text(
                 '— $nomeEscola',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ],
@@ -62,14 +64,12 @@ class AppShell extends ConsumerWidget {
         children: [
           _SideNav(
             selectedIndex: selectedIndex,
-            onSelected: (i) => ref.read(selectedNavIndexProvider.notifier).state = i,
+            onSelected: (i) =>
+                ref.read(selectedNavIndexProvider.notifier).state = i,
           ),
           const VerticalDivider(width: 1),
           Expanded(
-            child: IndexedStack(
-              index: selectedIndex,
-              children: _screens,
-            ),
+            child: IndexedStack(index: selectedIndex, children: _screens),
           ),
         ],
       ),
@@ -109,7 +109,10 @@ class _SideNav extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: selecionado ? scheme.primaryContainer : null,
                       borderRadius: BorderRadius.circular(14),
@@ -126,7 +129,13 @@ class _SideNav extends StatelessWidget {
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 10, color: cor, fontWeight: selecionado ? FontWeight.w600 : FontWeight.w400),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: cor,
+                      fontWeight: selecionado
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                    ),
                   ),
                 ],
               ),

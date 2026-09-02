@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/repository_providers.dart';
+import '../../core/utils/config_keys.dart';
 import '../../core/utils/date_formatters.dart';
 import '../../core/utils/domain_exception.dart';
 import '../../core/utils/turma_utils.dart';
@@ -10,6 +11,7 @@ import '../../shared/widgets/app_snackbar.dart';
 import '../../shared/widgets/confirm_dialog.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/suggest_field.dart';
+import '../configuracoes/configuracoes_providers.dart';
 
 /// Tela principal do sistema: registrar um empréstimo em poucos segundos,
 /// sem exigir nenhum cadastro prévio de aluno, turma ou livro.
@@ -17,7 +19,8 @@ class NovoEmprestimoScreen extends ConsumerStatefulWidget {
   const NovoEmprestimoScreen({super.key});
 
   @override
-  ConsumerState<NovoEmprestimoScreen> createState() => _NovoEmprestimoScreenState();
+  ConsumerState<NovoEmprestimoScreen> createState() =>
+      _NovoEmprestimoScreenState();
 }
 
 class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
@@ -39,7 +42,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _recalcularDataPrevista());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _recalcularDataPrevista(),
+    );
   }
 
   @override
@@ -111,7 +116,8 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
     final confirmado = await showConfirmDialog(
       context,
       titulo: 'Confirmar empréstimo',
-      mensagem: 'Registrar empréstimo de "${_livroController.text.trim()}" '
+      mensagem:
+          'Registrar empréstimo de "${_livroController.text.trim()}" '
           'para ${_alunoController.text.trim()} ($serie${_turmaController.text.trim().toUpperCase()})?',
       textoConfirmar: 'Registrar',
     );
@@ -145,7 +151,13 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
     } on DomainException catch (e) {
       if (mounted) showAppSnackBar(context, e.message, erro: true);
     } catch (e) {
-      if (mounted) showAppSnackBar(context, 'Erro ao registrar empréstimo: $e', erro: true);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          'Erro ao registrar empréstimo: $e',
+          erro: true,
+        );
+      }
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
@@ -153,6 +165,14 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(configuracaoStreamProvider, (anterior, atual) {
+      final prazoAnterior = anterior?.value?[ConfigKeys.prazoPadraoDias];
+      final prazoAtual = atual.value?[ConfigKeys.prazoPadraoDias];
+      if (prazoAtual != null && prazoAtual != prazoAnterior) {
+        _recalcularDataPrevista();
+      }
+    });
+
     final anoLetivo = TurmaUtils.anoLetivoDe(_dataEmprestimo);
 
     return Padding(
@@ -180,8 +200,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                             controller: _alunoController,
                             labelText: 'Aluno',
                             hintText: 'Nome do aluno',
-                            fetchSuggestions: (q) =>
-                                ref.read(emprestimoRepositoryProvider).sugerirAlunos(q),
+                            fetchSuggestions: (q) => ref
+                                .read(emprestimoRepositoryProvider)
+                                .sugerirAlunos(q),
                             onSubmitted: (_) => _serieFocusNode.requestFocus(),
                           ),
                           const SizedBox(height: 16),
@@ -195,12 +216,15 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                   focusNode: _serieFocusNode,
                                   keyboardType: TextInputType.number,
                                   maxLength: 1,
-                                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
                                   decoration: const InputDecoration(
                                     labelText: 'Série',
                                     counterText: '',
                                   ),
-                                  onSubmitted: (_) => _turmaFocusNode.requestFocus(),
+                                  onSubmitted: (_) =>
+                                      _turmaFocusNode.requestFocus(),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -210,16 +234,20 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                   controller: _turmaController,
                                   focusNode: _turmaFocusNode,
                                   maxLength: 1,
-                                  textCapitalization: TextCapitalization.characters,
+                                  textCapitalization:
+                                      TextCapitalization.characters,
                                   inputFormatters: [
-                                    FilteringTextInputFormatter.allow(RegExp('[a-zA-Z]')),
+                                    FilteringTextInputFormatter.allow(
+                                      RegExp('[a-zA-Z]'),
+                                    ),
                                     UpperCaseTextFormatter(),
                                   ],
                                   decoration: const InputDecoration(
                                     labelText: 'Turma',
                                     counterText: '',
                                   ),
-                                  onSubmitted: (_) => _livroFocusNode.requestFocus(),
+                                  onSubmitted: (_) =>
+                                      _livroFocusNode.requestFocus(),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -227,8 +255,11 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                 padding: const EdgeInsets.only(top: 16),
                                 child: Text(
                                   'Ano letivo: $anoLetivo',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurfaceVariant,
                                       ),
                                 ),
                               ),
@@ -240,8 +271,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                             labelText: 'Livro',
                             hintText: 'Título do livro',
                             focusNode: _livroFocusNode,
-                            fetchSuggestions: (q) =>
-                                ref.read(emprestimoRepositoryProvider).sugerirLivros(q),
+                            fetchSuggestions: (q) => ref
+                                .read(emprestimoRepositoryProvider)
+                                .sugerirLivros(q),
                           ),
                           const SizedBox(height: 16),
                           Row(
@@ -250,7 +282,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                 child: InkWell(
                                   onTap: _escolherDataEmprestimo,
                                   child: InputDecorator(
-                                    decoration: const InputDecoration(labelText: 'Data do empréstimo'),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Data do empréstimo',
+                                    ),
                                     child: Text(formatDate(_dataEmprestimo)),
                                   ),
                                 ),
@@ -260,8 +294,14 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                 child: InkWell(
                                   onTap: _escolherDataPrevista,
                                   child: InputDecorator(
-                                    decoration: const InputDecoration(labelText: 'Devolver até'),
-                                    child: Text(_dataPrevista == null ? '-' : formatDate(_dataPrevista)),
+                                    decoration: const InputDecoration(
+                                      labelText: 'Devolver até',
+                                    ),
+                                    child: Text(
+                                      _dataPrevista == null
+                                          ? '-'
+                                          : formatDate(_dataPrevista),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -270,7 +310,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                           const SizedBox(height: 16),
                           TextField(
                             controller: _observacaoController,
-                            decoration: const InputDecoration(labelText: 'Observação (opcional)'),
+                            decoration: const InputDecoration(
+                              labelText: 'Observação (opcional)',
+                            ),
                           ),
                           const SizedBox(height: 24),
                           SizedBox(
@@ -282,7 +324,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                   ? const SizedBox(
                                       width: 16,
                                       height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : const Icon(Icons.check),
                               label: const Text('Registrar Empréstimo'),

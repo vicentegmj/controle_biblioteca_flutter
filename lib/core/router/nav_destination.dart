@@ -44,6 +44,11 @@ const List<NavDestinationItem> kNavDestinations = [
     selectedIcon: Icons.history,
   ),
   NavDestinationItem(
+    label: 'Relatórios',
+    icon: Icons.picture_as_pdf_outlined,
+    selectedIcon: Icons.picture_as_pdf,
+  ),
+  NavDestinationItem(
     label: 'Configurações',
     icon: Icons.settings_outlined,
     selectedIcon: Icons.settings,

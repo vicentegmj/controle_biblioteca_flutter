@@ -1,3 +1,4 @@
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,7 +25,8 @@ class EmprestimosAbertoScreen extends ConsumerStatefulWidget {
       _EmprestimosAbertoScreenState();
 }
 
-class _EmprestimosAbertoScreenState extends ConsumerState<EmprestimosAbertoScreen> {
+class _EmprestimosAbertoScreenState
+    extends ConsumerState<EmprestimosAbertoScreen> {
   final _buscaController = TextEditingController();
 
   @override
@@ -37,7 +39,8 @@ class _EmprestimosAbertoScreenState extends ConsumerState<EmprestimosAbertoScree
     final confirmado = await showConfirmDialog(
       context,
       titulo: 'Confirmar devolução',
-      mensagem: 'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
+      mensagem:
+          'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
     );
     if (!confirmado) return;
     try {
@@ -101,54 +104,65 @@ class _EmprestimosAbertoScreenState extends ConsumerState<EmprestimosAbertoScree
                 }
                 return Card(
                   clipBehavior: Clip.antiAlias,
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Aluno')),
-                        DataColumn(label: Text('Turma')),
-                        DataColumn(label: Text('Livro')),
-                        DataColumn(label: Text('Empréstimo')),
-                        DataColumn(label: Text('Previsto')),
-                        DataColumn(label: Text('Situação')),
-                        DataColumn(label: Text('Ações')),
-                      ],
-                      rows: filtrados.map((item) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(item.alunoNome)),
-                            DataCell(Text(TurmaUtils.rotulo(item.serie, item.turmaLetra))),
-                            DataCell(Text(item.livroTitulo)),
-                            DataCell(Text(formatDate(item.dataEmprestimo))),
-                            DataCell(Text(formatDate(item.dataPrevistaDevolucao))),
-                            DataCell(
-                              item.atrasado
-                                  ? StatusBadge(
-                                      texto: 'Atrasado (${item.diasAtraso}d)',
-                                      tone: BadgeTone.danger,
-                                    )
-                                  : const StatusBadge(texto: 'Em dia', tone: BadgeTone.info),
+                  child: DataTable2(
+                    fixedTopRows: 1,
+                    minWidth: 900,
+                    columns: const [
+                      DataColumn2(label: Text('Aluno'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Turma'), size: ColumnSize.S),
+                      DataColumn2(label: Text('Livro'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Empréstimo')),
+                      DataColumn2(label: Text('Previsto')),
+                      DataColumn2(label: Text('Situação')),
+                      DataColumn2(label: Text('Ações'), size: ColumnSize.S),
+                    ],
+                    rows: filtrados.map((item) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(item.alunoNome)),
+                          DataCell(
+                            Text(
+                              TurmaUtils.rotulo(item.serie, item.turmaLetra),
                             ),
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'Devolver',
-                                    icon: const Icon(Icons.assignment_return_outlined),
-                                    onPressed: () => _devolver(item),
+                          ),
+                          DataCell(Text(item.livroTitulo)),
+                          DataCell(Text(formatDate(item.dataEmprestimo))),
+                          DataCell(
+                            Text(formatDate(item.dataPrevistaDevolucao)),
+                          ),
+                          DataCell(
+                            item.atrasado
+                                ? StatusBadge(
+                                    texto: 'Atrasado (${item.diasAtraso}d)',
+                                    tone: BadgeTone.danger,
+                                  )
+                                : const StatusBadge(
+                                    texto: 'Em dia',
+                                    tone: BadgeTone.info,
                                   ),
-                                  IconButton(
-                                    tooltip: 'Cancelar empréstimo',
-                                    icon: const Icon(Icons.cancel_outlined),
-                                    onPressed: () => _cancelar(item),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: 'Devolver',
+                                  icon: const Icon(
+                                    Icons.assignment_return_outlined,
                                   ),
-                                ],
-                              ),
+                                  onPressed: () => _devolver(item),
+                                ),
+                                IconButton(
+                                  tooltip: 'Cancelar empréstimo',
+                                  icon: const Icon(Icons.cancel_outlined),
+                                  onPressed: () => _cancelar(item),
+                                ),
+                              ],
                             ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 );
               },

@@ -76,6 +76,22 @@ carregar os dados restaurados.
 flutter test
 ```
 
+## Como gerar dados fake
+
+Com o aplicativo fechado, execute:
+
+```bash
+dart run tool/gerar_dados_fake.dart
+```
+
+**Atenção:** o script apaga todos os empréstimos e configurações antes de
+inserir 24 empréstimos variados e as configurações de desenvolvimento. Use-o
+somente em ambiente de desenvolvimento. Para usar outro banco:
+
+```bash
+dart run tool/gerar_dados_fake.dart --database=C:\caminho\biblioteca.sqlite
+```
+
 Os testes priorizam as regras de negócio (`test/services`): validação dos
 campos obrigatórios, letra da turma normalizada para maiúscula, ano letivo
 derivado da data do empréstimo, cálculo da data prevista pelo prazo padrão,

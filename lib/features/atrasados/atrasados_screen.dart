@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_table_2/data_table_2.dart';
 
 import '../../core/database/database.dart';
 import '../../core/utils/date_formatters.dart';
@@ -39,7 +40,8 @@ class _AtrasadosScreenState extends ConsumerState<AtrasadosScreen> {
     final confirmado = await showConfirmDialog(
       context,
       titulo: 'Confirmar devolução',
-      mensagem: 'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
+      mensagem:
+          'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
     );
     if (!confirmado) return;
     try {
@@ -74,7 +76,10 @@ class _AtrasadosScreenState extends ConsumerState<AtrasadosScreen> {
             child: itensAsync.when(
               data: (itens) {
                 var atrasados = itens.where((e) => e.atrasado).toList();
-                atrasados = filtrarEmprestimos(atrasados, _buscaController.text);
+                atrasados = filtrarEmprestimos(
+                  atrasados,
+                  _buscaController.text,
+                );
                 atrasados.sort((a, b) => b.diasAtraso.compareTo(a.diasAtraso));
 
                 if (atrasados.isEmpty) {
@@ -85,42 +90,50 @@ class _AtrasadosScreenState extends ConsumerState<AtrasadosScreen> {
                 }
                 return Card(
                   clipBehavior: Clip.antiAlias,
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Aluno')),
-                        DataColumn(label: Text('Turma')),
-                        DataColumn(label: Text('Livro')),
-                        DataColumn(label: Text('Empréstimo')),
-                        DataColumn(label: Text('Previsto')),
-                        DataColumn(label: Text('Dias em atraso')),
-                        DataColumn(label: Text('Ações')),
-                      ],
-                      rows: atrasados.map((item) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(item.alunoNome)),
-                            DataCell(Text(TurmaUtils.rotulo(item.serie, item.turmaLetra))),
-                            DataCell(Text(item.livroTitulo)),
-                            DataCell(Text(formatDate(item.dataEmprestimo))),
-                            DataCell(Text(formatDate(item.dataPrevistaDevolucao))),
-                            DataCell(
-                              StatusBadge(
-                                texto: '${item.diasAtraso} dia(s)',
-                                tone: BadgeTone.danger,
-                              ),
+                  child: DataTable2(
+                    fixedTopRows: 1,
+                    minWidth: 900,
+                    columns: const [
+                      DataColumn2(label: Text('Aluno'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Turma'), size: ColumnSize.S),
+                      DataColumn2(label: Text('Livro'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Empréstimo')),
+                      DataColumn2(label: Text('Previsto')),
+                      DataColumn2(label: Text('Dias em atraso')),
+                      DataColumn2(label: Text('Ações'), size: ColumnSize.S),
+                    ],
+                    rows: atrasados.map((item) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(item.alunoNome)),
+                          DataCell(
+                            Text(
+                              TurmaUtils.rotulo(item.serie, item.turmaLetra),
                             ),
-                            DataCell(
-                              IconButton(
-                                tooltip: 'Devolver',
-                                icon: const Icon(Icons.assignment_return_outlined),
-                                onPressed: () => _devolver(item),
-                              ),
+                          ),
+                          DataCell(Text(item.livroTitulo)),
+                          DataCell(Text(formatDate(item.dataEmprestimo))),
+                          DataCell(
+                            Text(formatDate(item.dataPrevistaDevolucao)),
+                          ),
+                          DataCell(
+                            StatusBadge(
+                              texto: '${item.diasAtraso} dia(s)',
+                              tone: BadgeTone.danger,
                             ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                          ),
+                          DataCell(
+                            IconButton(
+                              tooltip: 'Devolver',
+                              icon: const Icon(
+                                Icons.assignment_return_outlined,
+                              ),
+                              onPressed: () => _devolver(item),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 );
               },

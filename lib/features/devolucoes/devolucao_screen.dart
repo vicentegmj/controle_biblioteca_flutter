@@ -1,3 +1,4 @@
+import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,7 +39,8 @@ class _DevolucaoScreenState extends ConsumerState<DevolucaoScreen> {
     final confirmado = await showConfirmDialog(
       context,
       titulo: 'Confirmar devolução',
-      mensagem: 'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
+      mensagem:
+          'Confirmar a devolução de "${item.livroTitulo}" por ${item.alunoNome}?',
     );
     if (!confirmado) return;
 
@@ -82,7 +84,10 @@ class _DevolucaoScreenState extends ConsumerState<DevolucaoScreen> {
           Expanded(
             child: itensAsync.when(
               data: (itens) {
-                final filtrados = filtrarEmprestimos(itens, _buscaController.text);
+                final filtrados = filtrarEmprestimos(
+                  itens,
+                  _buscaController.text,
+                );
                 if (filtrados.isEmpty) {
                   return EmptyState(
                     mensagem: _buscaController.text.trim().isEmpty
@@ -92,44 +97,55 @@ class _DevolucaoScreenState extends ConsumerState<DevolucaoScreen> {
                 }
                 return Card(
                   clipBehavior: Clip.antiAlias,
-                  child: SingleChildScrollView(
-                    child: DataTable(
-                      columns: const [
-                        DataColumn(label: Text('Aluno')),
-                        DataColumn(label: Text('Turma')),
-                        DataColumn(label: Text('Livro')),
-                        DataColumn(label: Text('Empréstimo')),
-                        DataColumn(label: Text('Previsto')),
-                        DataColumn(label: Text('Situação')),
-                        DataColumn(label: Text('Ações')),
-                      ],
-                      rows: filtrados.map((item) {
-                        return DataRow(
-                          cells: [
-                            DataCell(Text(item.alunoNome)),
-                            DataCell(Text(TurmaUtils.rotulo(item.serie, item.turmaLetra))),
-                            DataCell(Text(item.livroTitulo)),
-                            DataCell(Text(formatDate(item.dataEmprestimo))),
-                            DataCell(Text(formatDate(item.dataPrevistaDevolucao))),
-                            DataCell(
-                              item.atrasado
-                                  ? StatusBadge(
-                                      texto: '${item.diasAtraso}d atraso',
-                                      tone: BadgeTone.danger,
-                                    )
-                                  : const StatusBadge(texto: 'Em dia', tone: BadgeTone.info),
+                  child: DataTable2(
+                    fixedTopRows: 1,
+                    minWidth: 1050,
+                    columns: const [
+                      DataColumn2(label: Text('Aluno'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Turma'), size: ColumnSize.S),
+                      DataColumn2(label: Text('Livro'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Empréstimo')),
+                      DataColumn2(label: Text('Previsto')),
+                      DataColumn2(label: Text('Situação')),
+                      DataColumn2(label: Text('Ações'), size: ColumnSize.L),
+                    ],
+                    rows: filtrados.map((item) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(item.alunoNome)),
+                          DataCell(
+                            Text(
+                              TurmaUtils.rotulo(item.serie, item.turmaLetra),
                             ),
-                            DataCell(
-                              FilledButton.icon(
-                                onPressed: _confirmando ? null : () => _confirmarDevolucao(item),
-                                icon: const Icon(Icons.check, size: 18),
-                                label: const Text('Confirmar Devolução'),
-                              ),
+                          ),
+                          DataCell(Text(item.livroTitulo)),
+                          DataCell(Text(formatDate(item.dataEmprestimo))),
+                          DataCell(
+                            Text(formatDate(item.dataPrevistaDevolucao)),
+                          ),
+                          DataCell(
+                            item.atrasado
+                                ? StatusBadge(
+                                    texto: '${item.diasAtraso}d atraso',
+                                    tone: BadgeTone.danger,
+                                  )
+                                : const StatusBadge(
+                                    texto: 'Em dia',
+                                    tone: BadgeTone.info,
+                                  ),
+                          ),
+                          DataCell(
+                            FilledButton.icon(
+                              onPressed: _confirmando
+                                  ? null
+                                  : () => _confirmarDevolucao(item),
+                              icon: const Icon(Icons.check, size: 18),
+                              label: const Text('Confirmar Devolução'),
                             ),
-                          ],
-                        );
-                      }).toList(),
-                    ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
                   ),
                 );
               },

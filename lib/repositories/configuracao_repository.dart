@@ -1,3 +1,5 @@
+import 'package:drift/drift.dart';
+
 import '../core/database/database.dart';
 import '../core/utils/config_keys.dart';
 
@@ -28,16 +30,23 @@ class ConfiguracaoRepository {
   }
 
   Future<String> getValor(String chave) async {
-    final row = await (_db.select(_db.configuracoes)
-          ..where((c) => c.chave.equals(chave)))
-        .getSingleOrNull();
+    final row = await (_db.select(
+      _db.configuracoes,
+    )..where((c) => c.chave.equals(chave))).getSingleOrNull();
     return row?.valor ?? ConfigKeys.defaults[chave] ?? '';
   }
 
   Future<void> setValor(String chave, String valor) async {
-    await _db.into(_db.configuracoes).insertOnConflictUpdate(
-          ConfiguracoesCompanion.insert(chave: chave, valor: valor),
-        );
+    final atualizados =
+        await (_db.update(_db.configuracoes)
+              ..where((c) => c.chave.equals(chave)))
+            .write(ConfiguracoesCompanion(valor: Value(valor)));
+
+    if (atualizados == 0) {
+      await _db
+          .into(_db.configuracoes)
+          .insert(ConfiguracoesCompanion.insert(chave: chave, valor: valor));
+    }
   }
 
   Future<void> setValores(Map<String, String> valores) async {

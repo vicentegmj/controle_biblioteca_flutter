@@ -15,12 +15,15 @@ class ConfiguracoesScreen extends ConsumerStatefulWidget {
   const ConfiguracoesScreen({super.key});
 
   @override
-  ConsumerState<ConfiguracoesScreen> createState() => _ConfiguracoesScreenState();
+  ConsumerState<ConfiguracoesScreen> createState() =>
+      _ConfiguracoesScreenState();
 }
 
 class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
+  static const _opcoesPrazo = [7, 14, 21, 30];
+
   final _nomeEscolaController = TextEditingController();
-  final _prazoController = TextEditingController();
+  int _prazoSelecionado = 7;
   String _diretorioBackup = '';
   bool _carregado = false;
   bool _salvando = false;
@@ -28,7 +31,6 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
   @override
   void dispose() {
     _nomeEscolaController.dispose();
-    _prazoController.dispose();
     super.dispose();
   }
 
@@ -36,7 +38,8 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
     if (_carregado) return;
     _carregado = true;
     _nomeEscolaController.text = config[ConfigKeys.nomeEscola] ?? '';
-    _prazoController.text = config[ConfigKeys.prazoPadraoDias] ?? '7';
+    final prazoSalvo = int.tryParse(config[ConfigKeys.prazoPadraoDias] ?? '7');
+    _prazoSelecionado = _opcoesPrazo.contains(prazoSalvo) ? prazoSalvo! : 7;
     _diretorioBackup = config[ConfigKeys.diretorioBackup] ?? '';
   }
 
@@ -48,12 +51,6 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
   }
 
   Future<void> _salvar() async {
-    final prazo = int.tryParse(_prazoController.text.trim());
-    if (prazo == null || prazo <= 0) {
-      showAppSnackBar(context, 'Informe um prazo padrão válido (em dias).', erro: true);
-      return;
-    }
-
     final confirmado = await showConfirmDialog(
       context,
       titulo: 'Salvar configurações',
@@ -66,12 +63,20 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
     try {
       await ref.read(configuracaoRepositoryProvider).setValores({
         ConfigKeys.nomeEscola: _nomeEscolaController.text.trim(),
-        ConfigKeys.prazoPadraoDias: prazo.toString(),
+        ConfigKeys.prazoPadraoDias: _prazoSelecionado.toString(),
         ConfigKeys.diretorioBackup: _diretorioBackup,
       });
-      if (mounted) showAppSnackBar(context, 'Configurações salvas com sucesso.');
+      if (mounted) {
+        showAppSnackBar(context, 'Configurações salvas com sucesso.');
+      }
     } catch (e) {
-      if (mounted) showAppSnackBar(context, 'Erro ao salvar configurações: $e', erro: true);
+      if (mounted) {
+        showAppSnackBar(
+          context,
+          'Erro ao salvar configurações: $e',
+          erro: true,
+        );
+      }
     } finally {
       if (mounted) setState(() => _salvando = false);
     }
@@ -104,27 +109,51 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Identificação', style: Theme.of(context).textTheme.titleMedium),
+                            Text(
+                              'Identificação',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                             const SizedBox(height: 12),
                             TextField(
                               controller: _nomeEscolaController,
-                              decoration: const InputDecoration(labelText: 'Nome da escola'),
-                            ),
-                            const SizedBox(height: 24),
-                            Text('Empréstimo', style: Theme.of(context).textTheme.titleMedium),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: 280,
-                              child: TextField(
-                                controller: _prazoController,
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Prazo padrão de empréstimo (dias)',
-                                ),
+                              decoration: const InputDecoration(
+                                labelText: 'Nome da escola',
                               ),
                             ),
                             const SizedBox(height: 24),
-                            Text('Backup', style: Theme.of(context).textTheme.titleMedium),
+                            Text(
+                              'Empréstimo',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: 280,
+                              child: DropdownButtonFormField<int>(
+                                initialValue: _prazoSelecionado,
+                                decoration: const InputDecoration(
+                                  labelText:
+                                      'Prazo padrão de empréstimo (dias)',
+                                ),
+                                items: _opcoesPrazo
+                                    .map(
+                                      (dias) => DropdownMenuItem(
+                                        value: dias,
+                                        child: Text('$dias dias'),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (prazo) {
+                                  if (prazo != null) {
+                                    setState(() => _prazoSelecionado = prazo);
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            Text(
+                              'Backup',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
                             const SizedBox(height: 12),
                             InputDecorator(
                               decoration: const InputDecoration(
@@ -156,7 +185,9 @@ class _ConfiguracoesScreenState extends ConsumerState<ConfiguracoesScreen> {
                                     ? const SizedBox(
                                         width: 16,
                                         height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
                                       )
                                     : const Icon(Icons.save_outlined),
                                 label: const Text('Salvar Configurações'),
