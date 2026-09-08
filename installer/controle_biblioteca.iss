@@ -1,5 +1,5 @@
 #define MyAppName "Biblioteca Escolar"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "com.biblioteca"
 #define MyAppExeName "controle_biblioteca.exe"
 #define BuildDir "..\build\windows\x64\runner\Release"

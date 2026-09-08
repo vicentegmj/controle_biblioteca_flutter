@@ -113,4 +113,33 @@ class EmprestimoService {
     }
     await _emprestimoRepository.cancelar(id);
   }
+
+  /// Corrige o nome do aluno e/ou o título do livro de um empréstimo já
+  /// lançado, sem alterar mais nenhum outro dado.
+  Future<void> editarNomes(
+    int id, {
+    required String alunoNome,
+    required String livroTitulo,
+  }) async {
+    final emprestimo = await _emprestimoRepository.getById(id);
+    if (emprestimo == null) {
+      throw const DomainException('Empréstimo não encontrado.');
+    }
+
+    final aluno = toTitleCase(alunoNome);
+    final livro = toTitleCase(livroTitulo);
+
+    if (aluno.isEmpty) {
+      throw const DomainException('Informe o nome do aluno.');
+    }
+    if (livro.isEmpty) {
+      throw const DomainException('Informe o título do livro.');
+    }
+
+    await _emprestimoRepository.atualizarNomes(
+      id,
+      alunoNome: aluno,
+      livroTitulo: livro,
+    );
+  }
 }

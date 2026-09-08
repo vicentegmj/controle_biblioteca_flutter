@@ -117,6 +117,7 @@ String _obterCaminhoBanco(List<String> args) {
     appData,
     'com.biblioteca',
     'controle_biblioteca',
+    'development',
     'biblioteca.sqlite',
   );
 }

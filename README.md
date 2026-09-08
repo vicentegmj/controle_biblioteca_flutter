@@ -14,14 +14,36 @@ histórico.
 Módulos: Dashboard, Novo Empréstimo, Devolução, Empréstimos em Aberto,
 Atrasados, Histórico, Configurações e Backup.
 
-## Requisitos
+## Como instalar no Windows
+
+1. Obtenha o arquivo `BibliotecaEscolar-Setup-1.0.0.exe` gerado na pasta
+   `dist/`.
+2. Feche uma versão anterior do Biblioteca Escolar, caso esteja aberta.
+3. Execute `BibliotecaEscolar-Setup-1.0.0.exe`.
+4. Escolha se deseja criar um atalho na área de trabalho e avance até
+   **Instalar**.
+5. Ao finalizar, mantenha marcada a opção **Abrir Biblioteca Escolar** ou
+   use o atalho criado no menu Iniciar.
+
+O aplicativo é instalado somente para o usuário atual em
+`%LOCALAPPDATA%\Programs\Biblioteca Escolar` e não exige permissão de
+administrador. Como o instalador ainda não possui assinatura digital, o
+Windows pode exibir o Microsoft Defender SmartScreen. Nesse caso, confira a
+origem do arquivo e use **Mais informações** → **Executar assim mesmo**.
+
+Na primeira execução, um banco vazio é criado automaticamente. Os dados da
+versão instalada ficam separados dos dados usados por `flutter run`.
+Atualizações e reinstalações preservam o banco de produção existente. Para desinstalar, use
+**Configurações do Windows** → **Aplicativos** → **Biblioteca Escolar**.
+
+## Requisitos de desenvolvimento
 
 - Flutter SDK 3.35+ (canal stable), Dart 3.9+
 - Windows 10/11 com Visual Studio 2022 (workload "Desenvolvimento para
   desktop com C++") para compilar o runner nativo do Windows
 - `flutter doctor` sem pendências na linha "Visual Studio"
 
-## Como instalar
+## Como preparar o projeto
 
 ```bash
 flutter pub get
@@ -57,9 +79,11 @@ de trabalho. O banco de dados do usuário não é removido na desinstalação.
 ## Banco de dados
 
 SQLite local, acessado via [Drift](https://drift.simonbinder.eu/). O arquivo
-fica no diretório de dados do aplicativo (obtido via `path_provider`,
-tipicamente `%APPDATA%/com.biblioteca.controle_biblioteca/`), não dentro da
-pasta do projeto. Logs técnicos ficam em `logs/app.log` no mesmo diretório.
+fica no diretório de dados do aplicativo (obtido via `path_provider`). Builds
+Release usam a subpasta `production`, enquanto execuções de desenvolvimento
+usam `development`, evitando que dados fake apareçam na versão instalada. O
+arquivo não fica dentro da pasta do projeto. Logs técnicos ficam em
+`logs/app.log` no mesmo diretório.
 
 O schema tem apenas duas tabelas: `emprestimos` e `configuracoes`. Não há
 cadastros de alunos, turmas ou livros — cada empréstimo é um registro

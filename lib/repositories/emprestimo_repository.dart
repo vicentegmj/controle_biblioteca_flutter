@@ -81,4 +81,18 @@ class EmprestimoRepository {
       ),
     );
   }
+
+  Future<void> atualizarNomes(
+    int id, {
+    required String alunoNome,
+    required String livroTitulo,
+  }) async {
+    await (_db.update(_db.emprestimos)..where((e) => e.id.equals(id))).write(
+      EmprestimosCompanion(
+        alunoNome: Value(alunoNome),
+        livroTitulo: Value(livroTitulo),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
 }

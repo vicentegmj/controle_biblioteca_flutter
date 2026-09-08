@@ -14,6 +14,7 @@ import '../../shared/widgets/confirm_dialog.dart';
 import '../../shared/widgets/empty_state.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/status_badge.dart';
+import 'editar_emprestimo_dialog.dart';
 import 'emprestimos_providers.dart';
 
 /// Consulta de todos os empréstimos atualmente em aberto (seção 10).
@@ -33,6 +34,10 @@ class _EmprestimosAbertoScreenState
   void dispose() {
     _buscaController.dispose();
     super.dispose();
+  }
+
+  Future<void> _editar(Emprestimo item) async {
+    await showEditarEmprestimoDialog(context, ref, item);
   }
 
   Future<void> _devolver(Emprestimo item) async {
@@ -114,7 +119,7 @@ class _EmprestimosAbertoScreenState
                       DataColumn2(label: Text('Empréstimo')),
                       DataColumn2(label: Text('Previsto')),
                       DataColumn2(label: Text('Situação')),
-                      DataColumn2(label: Text('Ações'), size: ColumnSize.S),
+                      DataColumn2(label: Text('Ações'), fixedWidth: 150),
                     ],
                     rows: filtrados.map((item) {
                       return DataRow(
@@ -146,15 +151,34 @@ class _EmprestimosAbertoScreenState
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
+                                  tooltip: 'Editar aluno/livro',
+                                  icon: const Icon(Icons.edit_outlined),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _editar(item),
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
                                   tooltip: 'Devolver',
                                   icon: const Icon(
                                     Icons.assignment_return_outlined,
                                   ),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
                                   onPressed: () => _devolver(item),
                                 ),
+                                const SizedBox(width: 8),
                                 IconButton(
                                   tooltip: 'Cancelar empréstimo',
                                   icon: const Icon(Icons.cancel_outlined),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
                                   onPressed: () => _cancelar(item),
                                 ),
                               ],
