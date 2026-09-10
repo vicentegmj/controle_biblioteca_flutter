@@ -200,6 +200,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                             controller: _alunoController,
                             labelText: 'Aluno',
                             hintText: 'Nome do aluno',
+                            style: Theme.of(context).textTheme.headlineSmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                            inputFormatters: [UpperCaseTextFormatter()],
                             fetchSuggestions: (q) => ref
                                 .read(emprestimoRepositoryProvider)
                                 .sugerirAlunos(q),
@@ -216,6 +219,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                   focusNode: _serieFocusNode,
                                   keyboardType: TextInputType.number,
                                   maxLength: 1,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.digitsOnly,
                                   ],
@@ -236,6 +242,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                                   maxLength: 1,
                                   textCapitalization:
                                       TextCapitalization.characters,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.allow(
                                       RegExp('[a-zA-Z]'),
@@ -271,6 +280,7 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                             labelText: 'Livro',
                             hintText: 'Título do livro',
                             focusNode: _livroFocusNode,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                             fetchSuggestions: (q) => ref
                                 .read(emprestimoRepositoryProvider)
                                 .sugerirLivros(q),
@@ -310,6 +320,9 @@ class _NovoEmprestimoScreenState extends ConsumerState<NovoEmprestimoScreen> {
                           const SizedBox(height: 16),
                           TextField(
                             controller: _observacaoController,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                            ),
                             decoration: const InputDecoration(
                               labelText: 'Observação (opcional)',
                             ),

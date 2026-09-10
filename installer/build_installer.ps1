@@ -33,4 +33,4 @@ try {
     Pop-Location
 }
 
-Write-Host "Instalador gerado em: $projectDir\dist\BibliotecaEscolar-Setup-1.0.0.exe"
+Write-Host "Instalador gerado em: $projectDir\dist\BibliotecaEscolar-Setup-1.0.1.exe"

@@ -20,6 +20,8 @@ class SuggestField extends StatefulWidget {
     this.hintText,
     this.onChanged,
     this.onSubmitted,
+    this.style,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
@@ -28,6 +30,12 @@ class SuggestField extends StatefulWidget {
   final Future<List<String>> Function(String query) fetchSuggestions;
   final FocusNode? focusNode;
   final ValueChanged<String>? onChanged;
+
+  /// Estilo do texto digitado no campo (ex.: fonte maior para facilitar a
+  /// conferência visual do valor).
+  final TextStyle? style;
+
+  final List<TextInputFormatter>? inputFormatters;
 
   /// Chamado quando o usuário confirma o valor (Enter sem sugestão
   /// destacada, ou seleção de uma sugestão).
@@ -138,6 +146,8 @@ class _SuggestFieldState extends State<SuggestField> {
           child: TextField(
             controller: widget.controller,
             focusNode: _focusNode,
+            style: widget.style,
+            inputFormatters: widget.inputFormatters,
             decoration: InputDecoration(
               labelText: widget.labelText,
               hintText: widget.hintText,
