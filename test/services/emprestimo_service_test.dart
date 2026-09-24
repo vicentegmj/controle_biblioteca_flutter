@@ -48,7 +48,10 @@ void main() {
 
   group('Validação de campos obrigatórios', () {
     test('rejeita aluno em branco', () {
-      expect(() => registrar(alunoNome: '   '), throwsA(isA<DomainException>()));
+      expect(
+        () => registrar(alunoNome: '   '),
+        throwsA(isA<DomainException>()),
+      );
     });
 
     test('rejeita livro em branco', () {
@@ -62,7 +65,10 @@ void main() {
 
     test('rejeita letra de turma inválida', () {
       expect(() => registrar(turmaLetra: '1'), throwsA(isA<DomainException>()));
-      expect(() => registrar(turmaLetra: 'AB'), throwsA(isA<DomainException>()));
+      expect(
+        () => registrar(turmaLetra: 'AB'),
+        throwsA(isA<DomainException>()),
+      );
       expect(() => registrar(turmaLetra: ''), throwsA(isA<DomainException>()));
     });
 
@@ -100,20 +106,72 @@ void main() {
     expect(emprestimo!.anoLetivo, 2027);
   });
 
-  test('Data prevista é calculada a partir do prazo padrão configurado', () async {
-    await configuracaoRepository.setValor('prazo_padrao_dias', '10');
-    final prevista = await service.calcularDataPrevista(DateTime(2026, 9, 1));
-    expect(prevista, DateTime(2026, 9, 11));
-  });
+  test(
+    'Data prevista é calculada a partir do prazo padrão configurado',
+    () async {
+      await configuracaoRepository.setValor('prazo_padrao_dias', '10');
+      final prevista = await service.calcularDataPrevista(DateTime(2026, 9, 1));
+      expect(prevista, DateTime(2026, 9, 11));
+    },
+  );
 
-  test('Não é necessário cadastro prévio: qualquer nome/turma/livro é aceito', () async {
-    final id = await registrar(
-      alunoNome: 'Pedro Henrique',
-      serie: 7,
-      turmaLetra: 'B',
-      livroTitulo: 'Dom Casmurro',
-    );
-    expect(id, isPositive);
+  test(
+    'Não é necessário cadastro prévio: qualquer nome/turma/livro é aceito',
+    () async {
+      final id = await registrar(
+        alunoNome: 'Pedro Henrique',
+        serie: 7,
+        turmaLetra: 'B',
+        livroTitulo: 'Dom Casmurro',
+      );
+      expect(id, isPositive);
+    },
+  );
+
+  group('Edição do empréstimo', () {
+    test('salva turma e nomes preservando os demais dados', () async {
+      final id = await registrar(observacao: 'Observação original');
+      await service.devolver(id);
+      final original = (await repository.getById(id))!;
+
+      await service.editarEmprestimo(
+        id,
+        alunoNome: 'maria silva',
+        livroTitulo: 'novo livro',
+        serie: 8,
+        turmaLetra: ' b ',
+      );
+
+      final editado = (await repository.getById(id))!;
+      expect(
+        editado,
+        original.copyWith(
+          alunoNome: 'Maria Silva',
+          livroTitulo: 'Novo Livro',
+          serie: 8,
+          turmaLetra: 'B',
+          updatedAt: editado.updatedAt,
+        ),
+      );
+    });
+
+    test('rejeita turma inválida sem gravar alterações parciais', () async {
+      final id = await registrar();
+      final original = await repository.getById(id);
+      for (final turma in [(0, 'A'), (10, 'A'), (6, ''), (6, 'AB'), (6, '1')]) {
+        await expectLater(
+          service.editarEmprestimo(
+            id,
+            alunoNome: 'Outro aluno',
+            livroTitulo: 'Outro livro',
+            serie: turma.$1,
+            turmaLetra: turma.$2,
+          ),
+          throwsA(isA<DomainException>()),
+        );
+        expect(await repository.getById(id), original);
+      }
+    });
   });
 
   group('Devolução', () {
@@ -168,29 +226,38 @@ void main() {
     expect(abertos.any((e) => e.id == id), isTrue);
   });
 
-  test('Histórico é preservado após devolução e cancelamento (nada é apagado)', () async {
-    final devolvidoId = await registrar(alunoNome: 'Maria Fernanda');
-    await service.devolver(devolvidoId);
+  test(
+    'Histórico é preservado após devolução e cancelamento (nada é apagado)',
+    () async {
+      final devolvidoId = await registrar(alunoNome: 'Maria Fernanda');
+      await service.devolver(devolvidoId);
 
-    final canceladoId = await registrar(alunoNome: 'Maria Fernanda');
-    await service.cancelar(canceladoId);
+      final canceladoId = await registrar(alunoNome: 'Maria Fernanda');
+      await service.cancelar(canceladoId);
 
-    final historico = await repository.watchTodos().first;
-    expect(historico.map((e) => e.id), containsAll([devolvidoId, canceladoId]));
-  });
+      final historico = await repository.watchTodos().first;
+      expect(
+        historico.map((e) => e.id),
+        containsAll([devolvidoId, canceladoId]),
+      );
+    },
+  );
 
   group('Sugestões pelo histórico', () {
-    test('retorna nomes distintos, sem diferenciar maiúsculas/minúsculas', () async {
-      await registrar(alunoNome: 'João Silva');
-      await registrar(alunoNome: 'João Silva');
-      await registrar(alunoNome: 'João Pedro');
-      await registrar(alunoNome: 'Maria Fernanda');
+    test(
+      'retorna nomes distintos, sem diferenciar maiúsculas/minúsculas',
+      () async {
+        await registrar(alunoNome: 'João Silva');
+        await registrar(alunoNome: 'João Silva');
+        await registrar(alunoNome: 'João Pedro');
+        await registrar(alunoNome: 'Maria Fernanda');
 
-      final sugestoes = await repository.sugerirAlunos('jo');
-      expect(sugestoes, containsAll(['João Silva', 'João Pedro']));
-      expect(sugestoes.toSet().length, sugestoes.length);
-      expect(sugestoes, isNot(contains('Maria Fernanda')));
-    });
+        final sugestoes = await repository.sugerirAlunos('jo');
+        expect(sugestoes, containsAll(['João Silva', 'João Pedro']));
+        expect(sugestoes.toSet().length, sugestoes.length);
+        expect(sugestoes, isNot(contains('Maria Fernanda')));
+      },
+    );
 
     test('busca livros por trecho do título', () async {
       await registrar(livroTitulo: 'Harry Potter e a Pedra Filosofal');

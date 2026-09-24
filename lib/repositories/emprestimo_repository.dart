@@ -33,9 +33,9 @@ class EmprestimoRepository {
     return query.watch();
   }
 
-  Future<Emprestimo?> getById(int id) =>
-      (_db.select(_db.emprestimos)..where((e) => e.id.equals(id)))
-          .getSingleOrNull();
+  Future<Emprestimo?> getById(int id) => (_db.select(
+    _db.emprestimos,
+  )..where((e) => e.id.equals(id))).getSingleOrNull();
 
   /// Sugestões de nomes de aluno já usados em empréstimos anteriores,
   /// distintos e sem diferenciar maiúsculas/minúsculas.
@@ -82,15 +82,19 @@ class EmprestimoRepository {
     );
   }
 
-  Future<void> atualizarNomes(
+  Future<void> atualizarEmprestimo(
     int id, {
     required String alunoNome,
     required String livroTitulo,
+    required int serie,
+    required String turmaLetra,
   }) async {
     await (_db.update(_db.emprestimos)..where((e) => e.id.equals(id))).write(
       EmprestimosCompanion(
         alunoNome: Value(alunoNome),
         livroTitulo: Value(livroTitulo),
+        serie: Value(serie),
+        turmaLetra: Value(turmaLetra),
         updatedAt: Value(DateTime.now()),
       ),
     );

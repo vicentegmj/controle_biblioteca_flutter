@@ -16,8 +16,8 @@ class EmprestimoService {
   EmprestimoService({
     required EmprestimoRepository emprestimoRepository,
     required ConfiguracaoRepository configuracaoRepository,
-  })  : _emprestimoRepository = emprestimoRepository,
-        _configuracaoRepository = configuracaoRepository;
+  }) : _emprestimoRepository = emprestimoRepository,
+       _configuracaoRepository = configuracaoRepository;
 
   final EmprestimoRepository _emprestimoRepository;
   final ConfiguracaoRepository _configuracaoRepository;
@@ -81,7 +81,9 @@ class EmprestimoService {
         livroTitulo: livro,
         dataEmprestimo: dataEmprestimo,
         dataPrevistaDevolucao: dataPrevistaDevolucao,
-        observacao: Value(observacao?.trim().isEmpty == true ? null : observacao?.trim()),
+        observacao: Value(
+          observacao?.trim().isEmpty == true ? null : observacao?.trim(),
+        ),
       ),
     );
   }
@@ -114,12 +116,13 @@ class EmprestimoService {
     await _emprestimoRepository.cancelar(id);
   }
 
-  /// Corrige o nome do aluno e/ou o título do livro de um empréstimo já
-  /// lançado, sem alterar mais nenhum outro dado.
-  Future<void> editarNomes(
+  /// Corrige aluno, livro e turma de um empréstimo já lançado.
+  Future<void> editarEmprestimo(
     int id, {
     required String alunoNome,
     required String livroTitulo,
+    required int serie,
+    required String turmaLetra,
   }) async {
     final emprestimo = await _emprestimoRepository.getById(id);
     if (emprestimo == null) {
@@ -136,10 +139,20 @@ class EmprestimoService {
       throw const DomainException('Informe o título do livro.');
     }
 
-    await _emprestimoRepository.atualizarNomes(
+    final letra = turmaLetra.trim().toUpperCase();
+    if (serie < 1 || serie > 9) {
+      throw const DomainException('Informe uma série válida (1 a 9).');
+    }
+    if (!_letraTurmaValida.hasMatch(letra)) {
+      throw const DomainException('Informe a letra da turma (ex.: A, B, C).');
+    }
+
+    await _emprestimoRepository.atualizarEmprestimo(
       id,
       alunoNome: aluno,
       livroTitulo: livro,
+      serie: serie,
+      turmaLetra: letra,
     );
   }
 }
