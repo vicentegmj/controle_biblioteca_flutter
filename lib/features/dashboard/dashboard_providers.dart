@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'emprestimos_mensais.dart';
+
 import '../../core/database/database.dart';
 import '../../core/database/repository_providers.dart';
 import '../../models/emprestimo_extensions.dart';
@@ -30,37 +32,58 @@ final _todosItensProvider = StreamProvider<List<Emprestimo>>((ref) {
   return ref.watch(emprestimoRepositoryProvider).watchTodos();
 });
 
-final dashboardIndicadoresProvider = Provider<AsyncValue<DashboardIndicadores>>((ref) {
-  final itensAsync = ref.watch(itensAbertosProvider);
-  final historicoAsync = ref.watch(_todosItensProvider);
+final emprestimosMensaisProvider =
+    Provider.family<AsyncValue<List<EmprestimosMes>>, int>((ref, meses) {
+      return ref
+          .watch(_todosItensProvider)
+          .whenData(
+            (itens) => agruparEmprestimosPorMes(
+              itens,
+              referencia: DateTime.now(),
+              meses: meses,
+            ),
+          );
+    });
 
-  if (itensAsync.isLoading || historicoAsync.isLoading) {
-    return const AsyncValue.loading();
-  }
-  final erro = itensAsync.hasError ? itensAsync.error : historicoAsync.error;
-  if (erro != null) {
-    return AsyncValue.error(erro, StackTrace.current);
-  }
+final dashboardIndicadoresProvider = Provider<AsyncValue<DashboardIndicadores>>(
+  (ref) {
+    final itensAsync = ref.watch(itensAbertosProvider);
+    final historicoAsync = ref.watch(_todosItensProvider);
 
-  final abertos = itensAsync.value ?? [];
-  final todos = historicoAsync.value ?? [];
-  final hoje = DateTime.now();
+    if (itensAsync.isLoading || historicoAsync.isLoading) {
+      return const AsyncValue.loading();
+    }
+    final erro = itensAsync.hasError ? itensAsync.error : historicoAsync.error;
+    if (erro != null) {
+      return AsyncValue.error(erro, StackTrace.current);
+    }
 
-  final atrasados = abertos.where((e) => e.atrasado).toList()
-    ..sort((a, b) => a.dataPrevistaDevolucao.compareTo(b.dataPrevistaDevolucao));
+    final abertos = itensAsync.value ?? [];
+    final todos = historicoAsync.value ?? [];
+    final hoje = DateTime.now();
 
-  final emprestimosHoje = todos.where((e) => _mesmoDia(e.dataEmprestimo, hoje)).length;
-  final devolucoesHoje = todos
-      .where((e) => e.dataDevolucao != null && _mesmoDia(e.dataDevolucao!, hoje))
-      .length;
+    final atrasados = abertos.where((e) => e.atrasado).toList()
+      ..sort(
+        (a, b) => a.dataPrevistaDevolucao.compareTo(b.dataPrevistaDevolucao),
+      );
 
-  return AsyncValue.data(
-    DashboardIndicadores(
-      emAberto: abertos.length,
-      atrasados: atrasados.length,
-      emprestimosHoje: emprestimosHoje,
-      devolucoesHoje: devolucoesHoje,
-      devolucoesAtrasadasOrdenadas: atrasados,
-    ),
-  );
-});
+    final emprestimosHoje = todos
+        .where((e) => _mesmoDia(e.dataEmprestimo, hoje))
+        .length;
+    final devolucoesHoje = todos
+        .where(
+          (e) => e.dataDevolucao != null && _mesmoDia(e.dataDevolucao!, hoje),
+        )
+        .length;
+
+    return AsyncValue.data(
+      DashboardIndicadores(
+        emAberto: abertos.length,
+        atrasados: atrasados.length,
+        emprestimosHoje: emprestimosHoje,
+        devolucoesHoje: devolucoesHoje,
+        devolucoesAtrasadasOrdenadas: atrasados,
+      ),
+    );
+  },
+);

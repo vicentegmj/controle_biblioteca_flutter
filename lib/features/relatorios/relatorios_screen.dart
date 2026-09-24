@@ -27,7 +27,11 @@ class _RelatoriosScreenState extends ConsumerState<RelatoriosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final emprestimosAsync = ref.watch(itensAbertosProvider);
+    final emprestimosAsync = ref.watch(
+      _tipo == TipoRelatorioEmprestimos.hoje
+          ? todosEmprestimosProvider
+          : itensAbertosProvider,
+    );
     final configuracoes = ref.watch(configuracaoStreamProvider).value;
 
     return Padding(
@@ -64,6 +68,11 @@ class _RelatoriosScreenState extends ConsumerState<RelatoriosScreen> {
                             const SizedBox(height: 12),
                             SegmentedButton<TipoRelatorioEmprestimos>(
                               segments: const [
+                                ButtonSegment(
+                                  value: TipoRelatorioEmprestimos.hoje,
+                                  label: Text('Empréstimos hoje'),
+                                  icon: Icon(Icons.today_outlined),
+                                ),
                                 ButtonSegment(
                                   value: TipoRelatorioEmprestimos.emAberto,
                                   label: Text('Em aberto'),

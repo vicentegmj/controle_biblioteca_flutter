@@ -14,6 +14,7 @@ void main() {
     required DateTime emprestimo,
     required DateTime prevista,
     StatusEmprestimo status = StatusEmprestimo.aberto,
+    DateTime? devolucao,
   }) {
     return Emprestimo(
       id: id,
@@ -24,7 +25,7 @@ void main() {
       livroTitulo: 'Livro $id',
       dataEmprestimo: emprestimo,
       dataPrevistaDevolucao: prevista,
-      dataDevolucao: null,
+      dataDevolucao: devolucao,
       observacao: null,
       status: status,
       createdAt: emprestimo,
@@ -67,6 +68,47 @@ void main() {
     );
 
     expect(resultado.map((e) => e.id), [3, 2]);
+  });
+
+  test('relatorio de hoje inclui devolvidos e exclui outros dias', () async {
+    final referencia = DateTime(2026, 9, 21, 12);
+    final registros = [
+      for (final (id, data, devolvido) in [
+        (1, DateTime(2026, 9, 21), false),
+        (2, DateTime(2026, 9, 21, 23, 59, 59), true),
+        (3, DateTime(2026, 9, 20, 23, 59, 59), false),
+        (4, DateTime(2026, 9, 22), false),
+        (5, DateTime(2026, 8, 21), false),
+        (6, DateTime(2025, 9, 21), false),
+      ])
+        item(
+          id: id,
+          aluno: 'Aluno $id',
+          serie: 7,
+          turma: 'A',
+          emprestimo: data,
+          prevista: data.add(const Duration(days: 7)),
+          status: devolvido
+              ? StatusEmprestimo.devolvido
+              : StatusEmprestimo.aberto,
+          devolucao: devolvido ? data : null,
+        ),
+    ];
+    final resultado = service.prepararDados(
+      emprestimos: registros,
+      tipo: TipoRelatorioEmprestimos.hoje,
+      ordenacao: OrdenacaoRelatorioEmprestimos.dataEmprestimo,
+      referencia: referencia,
+    );
+    expect(resultado.map((e) => e.id), [2, 1]);
+
+    final bytes = await service.gerarPdf(
+      itens: resultado,
+      tipo: TipoRelatorioEmprestimos.hoje,
+      ordenacao: OrdenacaoRelatorioEmprestimos.dataEmprestimo,
+      nomeEscola: 'Escola',
+    );
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
   });
 
   test('ordena pelo nome do aluno', () {

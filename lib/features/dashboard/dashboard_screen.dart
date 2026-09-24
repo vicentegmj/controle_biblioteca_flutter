@@ -9,9 +9,9 @@ import '../../shared/widgets/page_header.dart';
 import '../../shared/widgets/status_badge.dart';
 import '../configuracoes/configuracoes_providers.dart';
 import 'dashboard_providers.dart';
+import 'emprestimos_chart.dart';
 
-/// Tela inicial com indicadores essenciais (seção 13). Sem gráficos —
-/// apenas números e uma lista curta de devoluções mais atrasadas.
+/// Tela inicial com indicadores, evolução mensal e devoluções atrasadas.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -73,6 +73,8 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 24),
+                    const EmprestimosChart(),
                     const SizedBox(height: 32),
                     Text(
                       'Devoluções atrasadas',

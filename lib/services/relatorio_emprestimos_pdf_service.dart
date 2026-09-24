@@ -11,7 +11,7 @@ import '../core/utils/date_formatters.dart';
 import '../core/utils/turma_utils.dart';
 import '../models/emprestimo_extensions.dart';
 
-enum TipoRelatorioEmprestimos { emAberto, atrasados }
+enum TipoRelatorioEmprestimos { emAberto, atrasados, hoje }
 
 enum OrdenacaoRelatorioEmprestimos { dataEmprestimo, aluno, serie }
 
@@ -22,12 +22,19 @@ class RelatorioEmprestimosPdfService {
     required List<Emprestimo> emprestimos,
     required TipoRelatorioEmprestimos tipo,
     required OrdenacaoRelatorioEmprestimos ordenacao,
+    DateTime? referencia,
   }) {
+    final hoje = referencia ?? DateTime.now();
     final itens = emprestimos
         .where(
-          (item) => tipo == TipoRelatorioEmprestimos.atrasados
-              ? item.atrasado
-              : item.emAberto,
+          (item) => switch (tipo) {
+            TipoRelatorioEmprestimos.atrasados => item.atrasado,
+            TipoRelatorioEmprestimos.emAberto => item.emAberto,
+            TipoRelatorioEmprestimos.hoje =>
+              item.dataEmprestimo.year == hoje.year &&
+                  item.dataEmprestimo.month == hoje.month &&
+                  item.dataEmprestimo.day == hoje.day,
+          },
         )
         .toList();
 
@@ -65,9 +72,11 @@ class RelatorioEmprestimosPdfService {
     );
     final diretorio = await getTemporaryDirectory();
     final sufixo = DateTime.now().millisecondsSinceEpoch;
-    final nomeTipo = tipo == TipoRelatorioEmprestimos.atrasados
-        ? 'atrasados'
-        : 'em_aberto';
+    final nomeTipo = switch (tipo) {
+      TipoRelatorioEmprestimos.atrasados => 'atrasados',
+      TipoRelatorioEmprestimos.emAberto => 'em_aberto',
+      TipoRelatorioEmprestimos.hoje => 'hoje',
+    };
     final arquivo = File(
       p.join(diretorio.path, 'emprestimos_${nomeTipo}_$sufixo.pdf'),
     );
@@ -85,9 +94,11 @@ class RelatorioEmprestimosPdfService {
   }) async {
     final documento = pw.Document();
     final tema = await _criarTemaPdf();
-    final titulo = tipo == TipoRelatorioEmprestimos.atrasados
-        ? 'Empréstimos atrasados'
-        : 'Empréstimos em aberto';
+    final titulo = switch (tipo) {
+      TipoRelatorioEmprestimos.atrasados => 'Empréstimos atrasados',
+      TipoRelatorioEmprestimos.emAberto => 'Empréstimos em aberto',
+      TipoRelatorioEmprestimos.hoje => 'Empréstimos hoje',
+    };
 
     documento.addPage(
       pw.MultiPage(
@@ -142,7 +153,14 @@ class RelatorioEmprestimosPdfService {
                     item.livroTitulo,
                     formatDate(item.dataEmprestimo),
                     formatDate(item.dataPrevistaDevolucao),
-                    item.atrasado ? '${item.diasAtraso} dia(s)' : 'Em dia',
+                    item.status == StatusEmprestimo.cancelado
+                        ? 'Cancelado'
+                        : item.devolvido ||
+                              item.status == StatusEmprestimo.devolvido
+                        ? 'Devolvido'
+                        : item.atrasado
+                        ? '${item.diasAtraso} dia(s)'
+                        : 'Em dia',
                   ],
                 )
                 .toList(),
